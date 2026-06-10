@@ -1,0 +1,20 @@
+import { type Question } from "../types/formBuilder";
+import type { FormAnswers } from "../types/formViewer";
+import { publicApi } from "./axios";
+
+export interface PublicFormFields {
+  id: string;
+  title: string;
+  description?: string;
+  questions: Question[];
+}
+
+export const fetchPublicForm = async (shareId: string): Promise<PublicFormFields> => {
+  const response = await publicApi.get(`/forms/public/${shareId}`);
+  return response.data;
+};
+
+export const submitFormResponses = async (shareId: string, answers: FormAnswers): Promise<void> => {
+  const response = await publicApi.post(`/forms/${shareId}/responses`, { answers });
+  return response.data;
+};

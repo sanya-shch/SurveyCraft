@@ -1,0 +1,53 @@
+import { type QuestionConfig } from "../../../../types/formBuilder";
+
+interface BooleanConfigEditorProps {
+  config: QuestionConfig | null;
+  onChange: (newConfig: QuestionConfig) => void;
+}
+
+export default function BooleanConfigEditor({ config, onChange }: BooleanConfigEditorProps) {
+  const currentConfig = config || {};
+  const defaultValue = currentConfig.defaultValue ?? false;
+
+  const handleValueChange = (value: boolean) => {
+    onChange({ ...currentConfig, defaultValue: value });
+  };
+
+  return (
+    <div className="space-y-3 animate-in fade-in duration-150">
+      <label className="text-xs font-semibold text-slate-500 block">
+        Значення за замовчуванням (Default Value)
+      </label>
+
+      <div className="flex gap-2 bg-slate-100 p-1 rounded-xl w-fit">
+        <button
+          type="button"
+          onClick={() => handleValueChange(false)}
+          className={`px-4 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer ${
+            !defaultValue
+              ? "bg-white text-slate-800 shadow-sm"
+              : "text-slate-500 hover:text-slate-800"
+          }`}
+        >
+          ❌ Вимкнено (False)
+        </button>
+
+        <button
+          type="button"
+          onClick={() => handleValueChange(true)}
+          className={`px-4 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer ${
+            defaultValue
+              ? "bg-indigo-600 text-white shadow-sm"
+              : "text-slate-500 hover:text-slate-800"
+          }`}
+        >
+          ✅ Увімкнено (True)
+        </button>
+      </div>
+
+      <div className="flex items-center gap-2 mt-2 text-slate-400 text-[11px]">
+        <span>💡 Респондент побачить це поле у вказаному стані при відкритті форми.</span>
+      </div>
+    </div>
+  );
+}
