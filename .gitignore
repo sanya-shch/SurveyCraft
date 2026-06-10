@@ -1,0 +1,8 @@
+build/
+dist/
+node_modules/
+generated/
+
+.DS_Store
+.env
+.env.local

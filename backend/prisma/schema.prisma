@@ -1,0 +1,68 @@
+datasource db {
+  provider = "postgresql"
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum QuestionType {
+  TEXT
+  CHOICE_SINGLE
+  CHOICE_MULTI
+  BOOLEAN
+  DATE
+  NUMBER
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  password  String
+  forms     Form[]
+  createdAt DateTime @default(now())
+}
+
+model Form {
+  id          String     @id @default(uuid())
+  title       String
+  description String?
+  user        User       @relation(fields: [userId], references: [id])
+  userId      String
+
+  questions   Question[]
+  responses   Response[]
+
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @default(now())
+
+  isPublished Boolean    @default(false)
+  shareId     String     @unique @default(uuid())
+}
+
+model Question {
+  id          String   @id @default(uuid())
+  text        String
+  description String?
+  type        QuestionType
+  required    Boolean  @default(false)
+
+  options     Json?
+  config       Json?
+
+  formId      String
+  form        Form     @relation(fields: [formId], references: [id], onDelete: Cascade)
+
+  order       Int
+}
+
+model Response {
+  id        String   @id @default(uuid())
+
+  form      Form     @relation(fields: [formId], references: [id], onDelete: Cascade)
+  formId    String
+
+  answers   Json
+
+  createdAt DateTime @default(now())
+}
