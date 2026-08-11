@@ -16,28 +16,30 @@ enum QuestionType {
 }
 
 model User {
-  id        String   @id @default(uuid())
-  email     String   @unique
+  id        String      @id @default(uuid())
+  email     String      @unique
   password  String
   forms     Form[]
-  createdAt DateTime @default(now())
+  exportJobs ExportJob[]
+  createdAt DateTime    @default(now())
 }
 
 model Form {
-  id          String     @id @default(uuid())
+  id          String      @id @default(uuid())
   title       String
   description String?
-  user        User       @relation(fields: [userId], references: [id])
+  user        User        @relation(fields: [userId], references: [id])
   userId      String
 
   questions   Question[]
   responses   Response[]
+  exportJobs  ExportJob[]
 
-  createdAt   DateTime   @default(now())
-  updatedAt   DateTime   @default(now())
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @default(now())
 
-  isPublished Boolean    @default(false)
-  shareId     String     @unique @default(uuid())
+  isPublished Boolean     @default(false)
+  shareId     String      @unique @default(uuid())
 }
 
 model Question {
@@ -65,4 +67,43 @@ model Response {
   answers   Json
 
   createdAt DateTime @default(now())
+}
+
+enum ExportFormat {
+  CSV
+  EXCEL
+  PDF
+}
+
+enum ExportStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+}
+
+model ExportJob {
+  id          String       @id @default(uuid())
+
+  form        Form         @relation(fields: [formId], references: [id], onDelete: Cascade)
+  formId      String
+
+  user        User         @relation(fields: [userId], references: [id])
+  userId      String
+
+  format      ExportFormat
+  status      ExportStatus @default(PENDING)
+
+  filePath    String?
+  fileName    String?
+
+  responseCount Int?
+
+  error       String?
+
+  createdAt   DateTime     @default(now())
+  completedAt DateTime?
+
+  @@index([formId])
+  @@index([userId])
 }

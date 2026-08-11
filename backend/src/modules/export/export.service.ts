@@ -1,0 +1,119 @@
+import path from "node:path";
+import fs from "node:fs/promises";
+import { prisma } from "../../prisma/prisma.js";
+import { AppError } from "../../shared/middleware/errorHandler.js";
+import { exportQueue } from "./export.queue.js";
+import { ExportJobDto, ExportQueueJobData } from "./export.types.js";
+import { ExportFormat } from "@prisma/client";
+
+export const EXPORTS_DIR = path.join(process.cwd(), "uploads", "exports");
+
+const toDto = (job: {
+  id: string;
+  formId: string;
+  format: ExportFormat;
+  status: ExportJobDto["status"];
+  fileName: string | null;
+  responseCount: number | null;
+  error: string | null;
+  createdAt: Date;
+  completedAt: Date | null;
+}): ExportJobDto => ({
+  id: job.id,
+  formId: job.formId,
+  format: job.format,
+  status: job.status,
+  fileName: job.fileName,
+  responseCount: job.responseCount,
+  error: job.error,
+  createdAt: job.createdAt,
+  completedAt: job.completedAt,
+});
+
+const assertFormOwnership = async (formId: string, userId: string) => {
+  const form = await prisma.form.findUnique({ where: { id: formId } });
+
+  if (!form) {
+    throw new AppError("Form not found", 404);
+  }
+
+  if (form.userId !== userId) {
+    throw new AppError("Forbidden", 403);
+  }
+
+  return form;
+};
+
+export const createExportJob = async (
+  formId: string,
+  userId: string,
+  format: ExportFormat,
+): Promise<ExportJobDto> => {
+  await assertFormOwnership(formId, userId);
+
+  const job = await prisma.exportJob.create({
+    data: {
+      formId,
+      userId,
+      format,
+      status: "PENDING",
+    },
+  });
+
+  const queueData: ExportQueueJobData = { exportJobId: job.id };
+
+  await exportQueue.add("generate", queueData, { jobId: job.id });
+
+  return toDto(job);
+};
+
+export const listExportJobs = async (formId: string, userId: string): Promise<ExportJobDto[]> => {
+  await assertFormOwnership(formId, userId);
+
+  const jobs = await prisma.exportJob.findMany({
+    where: { formId },
+    orderBy: { createdAt: "desc" },
+  });
+
+  return jobs.map(toDto);
+};
+
+export const getExportJob = async (
+  formId: string,
+  userId: string,
+  jobId: string,
+): Promise<ExportJobDto> => {
+  await assertFormOwnership(formId, userId);
+
+  const job = await prisma.exportJob.findUnique({ where: { id: jobId } });
+
+  if (!job || job.formId !== formId) {
+    throw new AppError("Export job not found", 404);
+  }
+
+  return toDto(job);
+};
+
+export const getExportFileForDownload = async (formId: string, userId: string, jobId: string) => {
+  await assertFormOwnership(formId, userId);
+
+  const job = await prisma.exportJob.findUnique({ where: { id: jobId } });
+
+  if (!job || job.formId !== formId) {
+    throw new AppError("Export job not found", 404);
+  }
+
+  if (job.status !== "COMPLETED" || !job.filePath || !job.fileName) {
+    throw new AppError("Export is not ready yet", 409);
+  }
+
+  const absolutePath = path.join(EXPORTS_DIR, job.filePath);
+
+  try {
+    await fs.access(absolutePath);
+  } catch {
+    throw new AppError("Export file is missing on disk", 410);
+  }
+
+  return { absolutePath, fileName: job.fileName };
+};

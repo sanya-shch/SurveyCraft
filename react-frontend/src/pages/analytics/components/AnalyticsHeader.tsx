@@ -1,4 +1,5 @@
 import { useNavigate } from "react-router-dom";
+import ExportMenu from "./ExportMenu";
 
 interface AnalyticsHeaderProps {
   formId: string;
@@ -58,6 +59,8 @@ export default function AnalyticsHeader({
             </>
           )}
         </div>
+
+        <ExportMenu formId={formId} />
       </div>
     </header>
   );
