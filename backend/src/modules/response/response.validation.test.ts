@@ -1,0 +1,171 @@
+import { describe, expect, it } from "vitest";
+import { Question } from "../../shared/types/questions.js";
+import { buildResponseSchema } from "./response.validation.js";
+
+const makeQuestion = (overrides: Partial<Question>): Question => ({
+  id: "q-1",
+  type: "TEXT",
+  text: "Питання",
+  required: true,
+  order: 0,
+  options: [],
+  config: null,
+  ...overrides,
+});
+
+describe("buildResponseSchema — TEXT", () => {
+  it("вимагає непорожній рядок, коли required", () => {
+    const schema = buildResponseSchema([makeQuestion({ type: "TEXT", required: true })]);
+
+    expect(schema.safeParse({ "q-1": "" }).success).toBe(false);
+    expect(schema.safeParse({ "q-1": "ok" }).success).toBe(true);
+  });
+
+  it("необов'язкове поле можна не передавати", () => {
+    const schema = buildResponseSchema([makeQuestion({ type: "TEXT", required: false })]);
+
+    expect(schema.safeParse({}).success).toBe(true);
+  });
+
+  it('config.variant "email" вмикає валідацію email', () => {
+    const schema = buildResponseSchema([
+      makeQuestion({ type: "TEXT", config: { variant: "email" } }),
+    ]);
+
+    expect(schema.safeParse({ "q-1": "not-an-email" }).success).toBe(false);
+    expect(schema.safeParse({ "q-1": "a@b.com" }).success).toBe(true);
+  });
+
+  it("minLength/maxLength обмежують довжину", () => {
+    const schema = buildResponseSchema([
+      makeQuestion({ type: "TEXT", config: { minLength: 3, maxLength: 5 } }),
+    ]);
+
+    expect(schema.safeParse({ "q-1": "ab" }).success).toBe(false);
+    expect(schema.safeParse({ "q-1": "abc" }).success).toBe(true);
+    expect(schema.safeParse({ "q-1": "abcdef" }).success).toBe(false);
+  });
+
+  it("pattern застосовує regex-валідацію", () => {
+    const schema = buildResponseSchema([
+      makeQuestion({ type: "TEXT", config: { pattern: "^\\d{5}$" } }),
+    ]);
+
+    expect(schema.safeParse({ "q-1": "12345" }).success).toBe(true);
+    expect(schema.safeParse({ "q-1": "abcde" }).success).toBe(false);
+  });
+});
+
+describe("buildResponseSchema — NUMBER", () => {
+  it("приймає лише числа, з опційним min/max", () => {
+    const schema = buildResponseSchema([
+      makeQuestion({ type: "NUMBER", config: { min: 1, max: 10 } }),
+    ]);
+
+    expect(schema.safeParse({ "q-1": 0 }).success).toBe(false);
+    expect(schema.safeParse({ "q-1": 5 }).success).toBe(true);
+    expect(schema.safeParse({ "q-1": 11 }).success).toBe(false);
+    expect(schema.safeParse({ "q-1": "п'ять" }).success).toBe(false);
+  });
+
+  it("max можна задати без min (перевіряються незалежно)", () => {
+    const schema = buildResponseSchema([makeQuestion({ type: "NUMBER", config: { max: 100 } })]);
+
+    expect(schema.safeParse({ "q-1": 50 }).success).toBe(true);
+    expect(schema.safeParse({ "q-1": 101 }).success).toBe(false);
+  });
+});
+
+describe("buildResponseSchema — BOOLEAN", () => {
+  it("required BOOLEAN приймає лише true (напр. згода з умовами)", () => {
+    const schema = buildResponseSchema([makeQuestion({ type: "BOOLEAN", required: true })]);
+
+    expect(schema.safeParse({ "q-1": true }).success).toBe(true);
+    expect(schema.safeParse({ "q-1": false }).success).toBe(false);
+  });
+
+  it("НЕ-required BOOLEAN приймає і true, і false (і не стає optional — на відміну від інших типів)", () => {
+    const schema = buildResponseSchema([makeQuestion({ type: "BOOLEAN", required: false })]);
+
+    expect(schema.safeParse({ "q-1": true }).success).toBe(true);
+    expect(schema.safeParse({ "q-1": false }).success).toBe(true);
+  });
+});
+
+describe("buildResponseSchema — DATE", () => {
+  it("приймає валідну дату-рядок і відхиляє невалідну", () => {
+    const schema = buildResponseSchema([makeQuestion({ type: "DATE", required: true })]);
+
+    expect(schema.safeParse({ "q-1": "2026-01-15" }).success).toBe(true);
+    expect(schema.safeParse({ "q-1": "не дата" }).success).toBe(false);
+  });
+});
+
+describe("buildResponseSchema — CHOICE_SINGLE", () => {
+  const options = [
+    { id: "opt-a", text: "А", isDefault: false },
+    { id: "opt-b", text: "Б", isDefault: false },
+  ];
+
+  it("приймає лише id з переліку options", () => {
+    const schema = buildResponseSchema([
+      makeQuestion({ type: "CHOICE_SINGLE", options, required: true }),
+    ]);
+
+    expect(schema.safeParse({ "q-1": "opt-a" }).success).toBe(true);
+    expect(schema.safeParse({ "q-1": "opt-nonexistent" }).success).toBe(false);
+  });
+});
+
+describe("buildResponseSchema — CHOICE_MULTI", () => {
+  const options = [
+    { id: "opt-a", text: "А", isDefault: false },
+    { id: "opt-b", text: "Б", isDefault: false },
+  ];
+
+  it("приймає масив валідних id", () => {
+    const schema = buildResponseSchema([
+      makeQuestion({ type: "CHOICE_MULTI", options, required: false }),
+    ]);
+
+    expect(schema.safeParse({ "q-1": ["opt-a", "opt-b"] }).success).toBe(true);
+    expect(schema.safeParse({ "q-1": ["opt-x"] }).success).toBe(false);
+  });
+
+  it("required CHOICE_MULTI вимагає хоча б один вибір", () => {
+    const schema = buildResponseSchema([
+      makeQuestion({ type: "CHOICE_MULTI", options, required: true }),
+    ]);
+
+    expect(schema.safeParse({ "q-1": [] }).success).toBe(false);
+    expect(schema.safeParse({ "q-1": ["opt-a"] }).success).toBe(true);
+  });
+});
+
+describe("buildResponseSchema — загальне", () => {
+  it("кидає для непідтримуваного типу питання", () => {
+    expect(() => buildResponseSchema([makeQuestion({ type: "UNKNOWN" as any })])).toThrow(
+      /Unsupported question type/,
+    );
+  });
+
+  it("будує комбіновану схему з кількох питань одночасно", () => {
+    const schema = buildResponseSchema([
+      makeQuestion({ id: "name", type: "TEXT", required: true }),
+      makeQuestion({ id: "age", type: "NUMBER", required: false, config: { min: 0 } }),
+      makeQuestion({ id: "agree", type: "BOOLEAN", required: true }),
+    ]);
+
+    const result = schema.safeParse({ name: "Олександр", agree: true });
+    expect(result.success).toBe(true);
+
+    const invalid = schema.safeParse({ name: "", agree: false });
+    expect(invalid.success).toBe(false);
+  });
+
+  it("порожній масив питань дає схему, що приймає порожній об'єкт", () => {
+    const schema = buildResponseSchema([]);
+
+    expect(schema.safeParse({}).success).toBe(true);
+  });
+});
