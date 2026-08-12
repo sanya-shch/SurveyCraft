@@ -195,6 +195,38 @@ describe("publishForm", () => {
   });
 });
 
+describe("unpublishForm", () => {
+  it("кидає 404, якщо форми не існує", async () => {
+    (prisma.form.findUnique as any).mockResolvedValue(null);
+
+    await expect(unpublishForm(FORM_ID, OWNER_ID)).rejects.toMatchObject({
+      statusCode: 404,
+    });
+    expect(prisma.form.update).not.toHaveBeenCalled();
+  });
+
+  it("кидає 403, якщо викликає не власник форми", async () => {
+    (prisma.form.findUnique as any).mockResolvedValue(mockForm());
+
+    await expect(unpublishForm(FORM_ID, OTHER_USER_ID)).rejects.toMatchObject({
+      statusCode: 403,
+    });
+    expect(prisma.form.update).not.toHaveBeenCalled();
+  });
+
+  it("знімає форму з публікації для власника", async () => {
+    (prisma.form.findUnique as any).mockResolvedValue(mockForm());
+    (prisma.form.update as any).mockResolvedValue(mockForm({ isPublished: false }));
+
+    await unpublishForm(FORM_ID, OWNER_ID);
+
+    expect(prisma.form.update).toHaveBeenCalledWith({
+      where: { id: FORM_ID },
+      data: { isPublished: false },
+    });
+  });
+});
+
 describe("duplicateForm", () => {
   it("кидає 404, якщо оригінальної форми не існує", async () => {
     (prisma.form.findUnique as any).mockResolvedValue(null);

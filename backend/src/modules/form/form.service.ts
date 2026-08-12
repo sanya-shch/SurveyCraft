@@ -1,8 +1,8 @@
-import { Prisma } from '@prisma/client';
-import { prisma } from '../../prisma/prisma.js';
-import { AppError } from '../../shared/middleware/errorHandler.js';
-import { UpdateFormInput, UserFormsDto } from './form.types.js';
-import { toJson } from '../../shared/utils/helpers.js';
+import { Prisma } from "@prisma/client";
+import { prisma } from "../../prisma/prisma.js";
+import { AppError } from "../../shared/middleware/errorHandler.js";
+import { UpdateFormInput, UserFormsDto } from "./form.types.js";
+import { toJson } from "../../shared/utils/helpers.js";
 
 export const createForm = async ({
   title,
@@ -25,7 +25,7 @@ export const createForm = async ({
 export const getUserForms = async (userId: string): Promise<UserFormsDto> => {
   return prisma.form.findMany({
     where: { userId },
-    orderBy: { createdAt: 'desc' },
+    orderBy: { createdAt: "desc" },
     include: {
       _count: {
         select: {
@@ -43,11 +43,11 @@ export const deleteForm = async (formId: string, userId: string) => {
   });
 
   if (!form) {
-    throw new AppError('Form not found', 404);
+    throw new AppError("Form not found", 404);
   }
 
   if (form.userId !== userId) {
-    throw new AppError('Forbidden', 403);
+    throw new AppError("Forbidden", 403);
   }
 
   await prisma.form.delete({
@@ -60,7 +60,7 @@ export const getUserForm = async (formId: string, userId: string) => {
     where: { id: formId },
     include: {
       questions: {
-        orderBy: { order: 'asc' },
+        orderBy: { order: "asc" },
       },
       _count: {
         select: {
@@ -71,11 +71,11 @@ export const getUserForm = async (formId: string, userId: string) => {
   });
 
   if (!form) {
-    throw new AppError('Form not found', 404);
+    throw new AppError("Form not found", 404);
   }
 
   if (form.userId !== userId) {
-    throw new AppError('Forbidden', 403);
+    throw new AppError("Forbidden", 403);
   }
 
   return form;
@@ -86,13 +86,13 @@ export const getFormByShareId = async (shareId: string) => {
     where: { shareId },
     include: {
       questions: {
-        orderBy: { order: 'asc' },
+        orderBy: { order: "asc" },
       },
     },
   });
 
   if (!form || !form.isPublished) {
-    throw new AppError('Form not available', 404);
+    throw new AppError("Form not available", 404);
   }
 
   return {
@@ -103,31 +103,23 @@ export const getFormByShareId = async (shareId: string) => {
   };
 };
 
-export const updateForm = async (
-  formId: string,
-  userId: string,
-  data: UpdateFormInput
-) => {
+export const updateForm = async (formId: string, userId: string, data: UpdateFormInput) => {
   const form = await prisma.form.findUnique({
     where: { id: formId },
     include: { questions: true },
   });
 
-  if (!form) throw new AppError('Form not found', 404);
-  if (form.userId !== userId) throw new AppError('Forbidden', 403);
+  if (!form) throw new AppError("Form not found", 404);
+  if (form.userId !== userId) throw new AppError("Forbidden", 403);
 
   const existingQuestions = form.questions;
   const incomingQuestions = data.questions;
 
   // const existingMap = new Map(existingQuestions.map((q) => [q.id, q]));
 
-  const incomingIds = new Set(
-    incomingQuestions.filter((q: any) => q.id).map((q: any) => q.id)
-  );
+  const incomingIds = new Set(incomingQuestions.filter((q: any) => q.id).map((q: any) => q.id));
 
-  const toDelete = existingQuestions
-    .filter((q) => !incomingIds.has(q.id))
-    .map((q) => q.id);
+  const toDelete = existingQuestions.filter((q) => !incomingIds.has(q.id)).map((q) => q.id);
 
   const toUpdate = incomingQuestions.filter((q: any) => q.id);
 
@@ -158,8 +150,8 @@ export const updateForm = async (
           type: q.type,
           required: q.required ?? false,
           order: q.order,
-          options: 'options' in q ? toJson(q.options) : undefined,
-          config: 'config' in q ? toJson(q.config) : undefined,
+          options: "options" in q ? toJson(q.options) : undefined,
+          config: "config" in q ? toJson(q.config) : undefined,
         },
       });
     }
@@ -172,8 +164,8 @@ export const updateForm = async (
           type: q.type,
           required: q.required ?? false,
           order: q.order,
-          options: 'options' in q ? toJson(q.options) : undefined,
-          config: 'config' in q ? toJson(q.config) : undefined,
+          options: "options" in q ? toJson(q.options) : undefined,
+          config: "config" in q ? toJson(q.config) : undefined,
           formId,
         })),
       });
@@ -188,8 +180,8 @@ export const publishForm = async (formId: string, userId: string) => {
     where: { id: formId },
   });
 
-  if (!form) throw new AppError('Form not found', 404);
-  if (form.userId !== userId) throw new AppError('Forbidden', 403);
+  if (!form) throw new AppError("Form not found", 404);
+  if (form.userId !== userId) throw new AppError("Forbidden", 403);
 
   return prisma.form.update({
     where: { id: formId },
@@ -198,6 +190,13 @@ export const publishForm = async (formId: string, userId: string) => {
 };
 
 export const unpublishForm = async (formId: string, userId: string) => {
+  const form = await prisma.form.findUnique({
+    where: { id: formId },
+  });
+
+  if (!form) throw new AppError("Form not found", 404);
+  if (form.userId !== userId) throw new AppError("Forbidden", 403);
+
   return prisma.form.update({
     where: { id: formId },
     data: { isPublished: false },
@@ -210,12 +209,12 @@ export const duplicateForm = async (formId: string, userId: string) => {
     include: { questions: true },
   });
 
-  if (!form) throw new AppError('Form not found', 404);
+  if (!form) throw new AppError("Form not found", 404);
 
   return prisma.$transaction(async (tx) => {
     const newForm = await tx.form.create({
       data: {
-        title: form.title + ' (Copy)',
+        title: form.title + " (Copy)",
         description: form.description,
         userId,
         isPublished: false,
@@ -229,9 +228,7 @@ export const duplicateForm = async (formId: string, userId: string) => {
         type: q.type,
         required: q.required,
         order: q.order,
-        options: Array.isArray(q.options)
-          ? (q.options as Prisma.InputJsonValue)
-          : [],
+        options: Array.isArray(q.options) ? (q.options as Prisma.InputJsonValue) : [],
         config: q.config as Prisma.InputJsonValue,
         formId: newForm.id,
       })),
