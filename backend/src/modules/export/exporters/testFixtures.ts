@@ -1,0 +1,117 @@
+import { Question, Response as SurveyResponse } from "@prisma/client";
+import { ExportData } from "./exporter.types.js";
+
+export const buildQuestions = (): Question[] => [
+  {
+    id: "q-text",
+    text: "Ваше ім'я?",
+    description: null,
+    type: "TEXT",
+    required: true,
+    options: null,
+    config: null,
+    formId: "form-1",
+    order: 0,
+  },
+  {
+    id: "q-number",
+    text: "Скільки вам років?",
+    description: null,
+    type: "NUMBER",
+    required: false,
+    options: null,
+    config: null,
+    formId: "form-1",
+    order: 1,
+  },
+  {
+    id: "q-boolean",
+    text: "Чи згодні ви з умовами?",
+    description: null,
+    type: "BOOLEAN",
+    required: true,
+    options: null,
+    config: null,
+    formId: "form-1",
+    order: 2,
+  },
+  {
+    id: "q-date",
+    text: "Дата народження",
+    description: null,
+    type: "DATE",
+    required: false,
+    options: null,
+    config: null,
+    formId: "form-1",
+    order: 3,
+  },
+  {
+    id: "q-single",
+    text: "Улюблений колір?",
+    description: null,
+    type: "CHOICE_SINGLE",
+    required: true,
+    options: [
+      { id: "opt-red", text: "Червоний" },
+      { id: "opt-blue", text: "Синій" },
+    ],
+    config: null,
+    formId: "form-1",
+    order: 4,
+  },
+  {
+    id: "q-multi",
+    text: 'Які мови програмування знаєте? "Топ", варіант',
+    description: null,
+    type: "CHOICE_MULTI",
+    required: false,
+    options: [
+      { id: "opt-ts", text: "TypeScript" },
+      { id: "opt-py", text: "Python" },
+      { id: "opt-go", text: "Go" },
+    ],
+    config: null,
+    formId: "form-1",
+    order: 5,
+  },
+];
+
+export const buildResponses = (): SurveyResponse[] => [
+  {
+    id: "resp-1",
+    formId: "form-1",
+    createdAt: new Date("2026-01-15T10:00:00.000Z"),
+    answers: {
+      "q-text": 'Олександр, "сеньйор"',
+      "q-number": 29,
+      "q-boolean": true,
+      "q-date": "1996-03-02",
+      "q-single": "opt-blue",
+      "q-multi": ["opt-ts", "opt-go"],
+    },
+  },
+  {
+    id: "resp-2",
+    formId: "form-1",
+    createdAt: new Date("2026-01-16T12:30:00.000Z"),
+    answers: {
+      "q-text": "",
+      "q-number": null,
+      "q-boolean": false,
+      "q-single": "opt-red",
+      "q-multi": [],
+    },
+  },
+];
+
+export const buildExportData = (overrides: Partial<ExportData> = {}): ExportData => ({
+  form: {
+    id: "form-1",
+    title: 'Опитування "Сеньйор", 2026',
+    description: "Тестова форма для перевірки експорту",
+  },
+  questions: buildQuestions(),
+  responses: buildResponses(),
+  ...overrides,
+});

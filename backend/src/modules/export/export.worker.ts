@@ -8,7 +8,7 @@ import { exportersByFormat } from "./exporters/index.js";
 import { EXPORTS_DIR } from "./export.service.js";
 import { ExportQueueJobData } from "./export.types.js";
 
-const processExportJob = async (job: Job<ExportQueueJobData>) => {
+export const processExportJob = async (job: Job<ExportQueueJobData>) => {
   const { exportJobId } = job.data;
 
   const exportJob = await prisma.exportJob.findUnique({
