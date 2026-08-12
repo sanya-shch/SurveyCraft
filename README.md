@@ -12,6 +12,52 @@ The frontend is designed as a dynamic UI that renders forms and analytics based 
 
 This project demonstrates strong capabilities in building scalable APIs, handling dynamic data structures, implementing validation logic, and designing user-centric analytics systems similar to modern SaaS products like Typeform.
 
+## Tech Stack
+
+**Backend**
+- Node.js + TypeScript
+- Prisma ORM
+- PostgreSQL
+- BullMQ
+- Redis (background job queues)
+- JWT-based authentication
+
+**Frontend**
+- React
+
+## Getting Started
+
+```bash
+git clone https://github.com/sanya-shch/SurveyCraft.git
+cd SurveyCraft
+
+# Start the backend:
+cd backend
+npm install
+npx prisma generate
+npx prisma migrate dev
+npm run dev
+
+# Start the frontend (in a separate terminal):
+cd react-frontend
+npm run dev
+```
+
+### Environment Variables
+
+Create a `.env` file inside `backend/` with the following variables:
+
+```dotenv
+# PostgreSQL connection string, e.g. postgresql://user:password@localhost:5432/surveycraft
+DATABASE_URL=
+
+# Secret used to sign/verify JWT auth tokens
+JWT_SECRET=
+
+# Redis connection string, e.g. redis://localhost:6379
+REDIS_URL=
+```
+
 ## Screenshots
 
 ![dashboard](/assets/dashboardScreenshot.png)
