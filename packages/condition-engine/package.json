@@ -1,0 +1,20 @@
+{
+  "name": "@surveycraft/condition-engine",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "main": "./src/condition.ts",
+  "types": "./src/condition.ts",
+  "exports": {
+    ".": "./src/condition.ts"
+  },
+  "scripts": {
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@surveycraft/shared-types": "workspace:*"
+  },
+  "devDependencies": {
+    "vitest": "^4.1.10"
+  }
+}

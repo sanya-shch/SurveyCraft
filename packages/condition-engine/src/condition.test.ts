@@ -13,37 +13,55 @@ describe("evaluateCondition", () => {
   });
 
   it("equals: показує питання, якщо відповідь збігається", () => {
-    const condition = { logic: "AND" as const, rules: [{ questionId: "q1", operator: "equals" as const, value: "yes" }] };
+    const condition = {
+      logic: "AND" as const,
+      rules: [{ questionId: "q1", operator: "equals" as const, value: "yes" }],
+    };
     expect(evaluateCondition(condition, { q1: "yes" })).toBe(true);
     expect(evaluateCondition(condition, { q1: "no" })).toBe(false);
     expect(evaluateCondition(condition, {})).toBe(false);
   });
 
   it("notEquals", () => {
-    const condition = { logic: "AND" as const, rules: [{ questionId: "q1", operator: "notEquals" as const, value: "no" }] };
+    const condition = {
+      logic: "AND" as const,
+      rules: [{ questionId: "q1", operator: "notEquals" as const, value: "no" }],
+    };
     expect(evaluateCondition(condition, { q1: "yes" })).toBe(true);
     expect(evaluateCondition(condition, { q1: "no" })).toBe(false);
   });
 
   it("gt / lt: числові порівняння", () => {
-    const gt = { logic: "AND" as const, rules: [{ questionId: "q1", operator: "gt" as const, value: 18 }] };
+    const gt = {
+      logic: "AND" as const,
+      rules: [{ questionId: "q1", operator: "gt" as const, value: 18 }],
+    };
     expect(evaluateCondition(gt, { q1: 25 })).toBe(true);
     expect(evaluateCondition(gt, { q1: 10 })).toBe(false);
     expect(evaluateCondition(gt, { q1: "25" })).toBe(false); // тип не число - не збігається
 
-    const lt = { logic: "AND" as const, rules: [{ questionId: "q1", operator: "lt" as const, value: 100 }] };
+    const lt = {
+      logic: "AND" as const,
+      rules: [{ questionId: "q1", operator: "lt" as const, value: 100 }],
+    };
     expect(evaluateCondition(lt, { q1: 50 })).toBe(true);
   });
 
   it("contains: працює і для масиву (CHOICE_MULTI), і для рядка", () => {
-    const condition = { logic: "AND" as const, rules: [{ questionId: "q1", operator: "contains" as const, value: "pizza" }] };
+    const condition = {
+      logic: "AND" as const,
+      rules: [{ questionId: "q1", operator: "contains" as const, value: "pizza" }],
+    };
     expect(evaluateCondition(condition, { q1: ["pizza", "sushi"] })).toBe(true);
     expect(evaluateCondition(condition, { q1: ["sushi"] })).toBe(false);
     expect(evaluateCondition(condition, { q1: "I love pizza" })).toBe(true);
   });
 
   it("in: перевіряє, чи значення відповіді входить у переданий список", () => {
-    const condition = { logic: "AND" as const, rules: [{ questionId: "q1", operator: "in" as const, value: ["UA", "PL", "DE"] }] };
+    const condition = {
+      logic: "AND" as const,
+      rules: [{ questionId: "q1", operator: "in" as const, value: ["UA", "PL", "DE"] }],
+    };
     expect(evaluateCondition(condition, { q1: "UA" })).toBe(true);
     expect(evaluateCondition(condition, { q1: "US" })).toBe(false);
   });
@@ -77,8 +95,17 @@ describe("resolveVisibleQuestionIds", () => {
   it("повертає тільки ті питання, чиї умови виконались", () => {
     const questions: QuestionLike[] = [
       { id: "q1" },
-      { id: "q2", condition: { logic: "AND", rules: [{ questionId: "q1", operator: "equals", value: "yes" }] } },
-      { id: "q3", condition: { logic: "AND", rules: [{ questionId: "q1", operator: "equals", value: "no" }] } },
+      {
+        id: "q2",
+        condition: {
+          logic: "AND",
+          rules: [{ questionId: "q1", operator: "equals", value: "yes" }],
+        },
+      },
+      {
+        id: "q3",
+        condition: { logic: "AND", rules: [{ questionId: "q1", operator: "equals", value: "no" }] },
+      },
     ];
     const visible = resolveVisibleQuestionIds(questions, { q1: "yes" });
     expect(visible.has("q1")).toBe(true);
@@ -118,7 +145,10 @@ describe("validateConditionGraph", () => {
 
   it("виявляє посилання на неіснуюче питання", () => {
     const result = validateConditionGraph([
-      q("q1", 0, { logic: "AND", rules: [{ questionId: "ghost", operator: "equals", value: "yes" }] }),
+      q("q1", 0, {
+        logic: "AND",
+        rules: [{ questionId: "ghost", operator: "equals", value: "yes" }],
+      }),
     ]);
     expect(result.valid).toBe(false);
     expect(result.errors[0].reason).toBe("UNKNOWN_QUESTION");

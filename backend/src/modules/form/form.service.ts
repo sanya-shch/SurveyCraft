@@ -3,7 +3,7 @@ import { prisma } from "../../prisma/prisma.js";
 import { AppError } from "../../shared/middleware/errorHandler.js";
 import { UpdateFormInput, UserFormsDto } from "./form.types.js";
 import { toJson } from "../../shared/utils/helpers.js";
-import { validateConditionGraph } from "../../shared/utils/condition.js";
+import { validateConditionGraph } from "@surveycraft/condition-engine";
 
 export const createForm = async ({
   title,
@@ -248,7 +248,10 @@ export const duplicateForm = async (formId: string, userId: string) => {
 
     const remapCondition = (condition: unknown): Prisma.InputJsonValue | undefined => {
       if (!condition || typeof condition !== "object") return undefined;
-      const c = condition as { logic: "AND" | "OR"; rules: { questionId: string; operator: string; value: unknown }[] };
+      const c = condition as {
+        logic: "AND" | "OR";
+        rules: { questionId: string; operator: string; value: unknown }[];
+      };
       return {
         logic: c.logic,
         rules: c.rules.map((r) => ({ ...r, questionId: idMap.get(r.questionId) ?? r.questionId })),

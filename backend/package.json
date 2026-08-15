@@ -21,6 +21,7 @@
   "dependencies": {
     "@prisma/adapter-pg": "^7.8.0",
     "@prisma/client": "^7.8.0",
+    "@surveycraft/condition-engine": "workspace:*",
     "@surveycraft/shared-types": "workspace:*",
     "bcrypt": "^6.0.0",
     "bullmq": "^6.0.11",

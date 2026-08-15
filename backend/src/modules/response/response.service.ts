@@ -2,7 +2,7 @@ import { prisma } from "../../prisma/prisma.js";
 import { buildResponseSchema } from "./response.validation.js";
 import { AppError } from "../../shared/middleware/errorHandler.js";
 import { Answers } from "./response.types.js";
-import { resolveVisibleQuestionIds, type QuestionLike } from "../../shared/utils/condition.js";
+import { resolveVisibleQuestionIds, type QuestionLike } from "@surveycraft/condition-engine";
 import { toJson } from "../../shared/utils/helpers.js";
 
 export const submitResponse = async (shareId: string, answers: Answers) => {
