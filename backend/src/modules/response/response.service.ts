@@ -1,7 +1,9 @@
-import { prisma } from '../../prisma/prisma.js';
-import { buildResponseSchema } from './response.validation.js';
-import { AppError } from '../../shared/middleware/errorHandler.js';
-import { Answers } from './response.types.js';
+import { prisma } from "../../prisma/prisma.js";
+import { buildResponseSchema } from "./response.validation.js";
+import { AppError } from "../../shared/middleware/errorHandler.js";
+import { Answers } from "./response.types.js";
+import { resolveVisibleQuestionIds, type QuestionLike } from "../../shared/utils/condition.js";
+import { toJson } from "../../shared/utils/helpers.js";
 
 export const submitResponse = async (shareId: string, answers: Answers) => {
   const form = await prisma.form.findUnique({
@@ -12,14 +14,19 @@ export const submitResponse = async (shareId: string, answers: Answers) => {
   });
 
   if (!form) {
-    throw new AppError('Form not found', 404);
+    throw new AppError("Form not found", 404);
   }
 
   if (!form.isPublished) {
-    throw new AppError('Form is not published', 400);
+    throw new AppError("Form is not published", 400);
   }
 
-  const schema = buildResponseSchema(form.questions);
+  const visibleQuestionIds = resolveVisibleQuestionIds(
+    form.questions as unknown as QuestionLike[],
+    answers,
+  );
+
+  const schema = buildResponseSchema(form.questions, visibleQuestionIds);
 
   const result = schema.safeParse(answers);
 
@@ -29,13 +36,20 @@ export const submitResponse = async (shareId: string, answers: Answers) => {
       message: err.message,
     }));
 
-    throw new AppError('Validation failed', 400, formattedErrors);
+    throw new AppError("Validation failed", 400, formattedErrors);
   }
+
+  const cleanedAnswers = Object.fromEntries(
+    Object.entries(result.data as Answers).filter(([questionId]) =>
+      visibleQuestionIds.has(questionId),
+    ),
+  ) as Answers;
 
   return prisma.response.create({
     data: {
       formId: form.id,
-      answers: result.data as Answers,
+      answers: toJson(cleanedAnswers),
+      visibleQuestionIds: toJson(Array.from(visibleQuestionIds)),
     },
   });
 };

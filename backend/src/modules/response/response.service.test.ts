@@ -76,8 +76,74 @@ describe("submitResponse", () => {
     const result = await submitResponse(SHARE_ID, { "q-name": "Олександр" });
 
     expect(prisma.response.create).toHaveBeenCalledWith({
-      data: { formId: "form-1", answers: { "q-name": "Олександр" } },
+      data: {
+        formId: "form-1",
+        answers: { "q-name": "Олександр" },
+        visibleQuestionIds: ["q-name"],
+      },
     });
     expect(result.id).toBe("resp-1");
+  });
+
+  it("умовно приховане питання не блокує required-валідацію і не потрапляє у збережені answers", async () => {
+    const formWithCondition = {
+      ...publishedForm,
+      questions: [
+        ...publishedForm.questions,
+        {
+          id: "q-followup",
+          type: "TEXT",
+          text: "Уточнення",
+          required: true,
+          order: 1,
+          options: [],
+          config: null,
+          condition: {
+            logic: "AND",
+            rules: [{ questionId: "q-name", operator: "equals", value: "Тригер" }],
+          },
+        },
+      ],
+    };
+    (prisma.form.findUnique as any).mockResolvedValue(formWithCondition);
+    (prisma.response.create as any).mockResolvedValue({ id: "resp-2" });
+
+    await submitResponse(SHARE_ID, { "q-name": "Олександр", "q-followup": "непрохане значення" });
+
+    expect(prisma.response.create).toHaveBeenCalledWith({
+      data: {
+        formId: "form-1",
+        answers: { "q-name": "Олександр" },
+        visibleQuestionIds: ["q-name"],
+      },
+    });
+  });
+
+  it("умовно показане required-питання все ще валідується як обов'язкове", async () => {
+    const formWithCondition = {
+      ...publishedForm,
+      questions: [
+        ...publishedForm.questions,
+        {
+          id: "q-followup",
+          type: "TEXT",
+          text: "Уточнення",
+          required: true,
+          order: 1,
+          options: [],
+          config: null,
+          condition: {
+            logic: "AND",
+            rules: [{ questionId: "q-name", operator: "equals", value: "Тригер" }],
+          },
+        },
+      ],
+    };
+    (prisma.form.findUnique as any).mockResolvedValue(formWithCondition);
+
+    await expect(submitResponse(SHARE_ID, { "q-name": "Тригер" })).rejects.toMatchObject({
+      statusCode: 400,
+    });
+    expect(prisma.response.create).not.toHaveBeenCalled();
   });
 });

@@ -142,6 +142,42 @@ describe("buildResponseSchema — CHOICE_MULTI", () => {
   });
 });
 
+describe("buildResponseSchema — visibleQuestionIds (умовна логіка)", () => {
+  it("без visibleQuestionIds required-питання лишається обов'язковим (стара поведінка)", () => {
+    const schema = buildResponseSchema([makeQuestion({ type: "TEXT", required: true })]);
+
+    expect(schema.safeParse({}).success).toBe(false);
+  });
+
+  it("питання поза visibleQuestionIds стає необов'язковим, навіть якщо required: true", () => {
+    const schema = buildResponseSchema(
+      [makeQuestion({ id: "q-1", type: "TEXT", required: true })],
+      new Set<string>(), // жодне питання не видиме
+    );
+
+    expect(schema.safeParse({}).success).toBe(true);
+  });
+
+  it("питання в visibleQuestionIds лишається обов'язковим, як і раніше", () => {
+    const schema = buildResponseSchema(
+      [makeQuestion({ id: "q-1", type: "TEXT", required: true })],
+      new Set(["q-1"]),
+    );
+
+    expect(schema.safeParse({}).success).toBe(false);
+    expect(schema.safeParse({ "q-1": "ok" }).success).toBe(true);
+  });
+
+  it("приховане required BOOLEAN теж стає необов'язковим (єдиний тип без .optional() за замовчуванням)", () => {
+    const schema = buildResponseSchema(
+      [makeQuestion({ id: "q-1", type: "BOOLEAN", required: true })],
+      new Set<string>(),
+    );
+
+    expect(schema.safeParse({}).success).toBe(true);
+  });
+});
+
 describe("buildResponseSchema — загальне", () => {
   it("кидає для непідтримуваного типу питання", () => {
     expect(() => buildResponseSchema([makeQuestion({ type: "UNKNOWN" as any })])).toThrow(

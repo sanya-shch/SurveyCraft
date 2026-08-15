@@ -1,18 +1,18 @@
-import { z } from 'zod';
-import { Question } from '../../shared/types/questions.js';
+import { z } from "zod";
+import { Question } from "../../shared/types/questions.js";
 
-export const buildResponseSchema = (questions: unknown) => {
+export const buildResponseSchema = (questions: unknown, visibleQuestionIds?: Set<string>) => {
   const shape: Record<string, z.ZodTypeAny> = {};
 
   for (const q of questions as Question[]) {
     let schema;
 
     switch (q.type) {
-      case 'TEXT': {
-        schema = z.string().min(1, 'This field is required');
+      case "TEXT": {
+        schema = z.string().min(1, "This field is required");
 
-        if (q.config?.variant === 'email') {
-          schema = schema.email('Invalid email');
+        if (q.config?.variant === "email") {
+          schema = schema.email("Invalid email");
         }
 
         if (q.config?.minLength) {
@@ -24,13 +24,13 @@ export const buildResponseSchema = (questions: unknown) => {
         }
 
         if (q.config?.pattern) {
-          schema = schema.regex(new RegExp(q.config.pattern), 'Invalid format');
+          schema = schema.regex(new RegExp(q.config.pattern), "Invalid format");
         }
 
         break;
       }
 
-      case 'NUMBER': {
+      case "NUMBER": {
         schema = z.number();
 
         if (q.config?.min !== undefined) {
@@ -44,27 +44,22 @@ export const buildResponseSchema = (questions: unknown) => {
         break;
       }
 
-      case 'BOOLEAN': {
+      case "BOOLEAN": {
         schema = z.boolean();
 
         if (q.required) {
-          schema = schema.refine(
-            (val) => val === true,
-            'This field must be accepted'
-          );
+          schema = schema.refine((val) => val === true, "This field must be accepted");
         }
 
         break;
       }
 
-      case 'DATE': {
-        schema = z
-          .string()
-          .refine((val) => !isNaN(Date.parse(val)), 'Invalid date');
+      case "DATE": {
+        schema = z.string().refine((val) => !isNaN(Date.parse(val)), "Invalid date");
         break;
       }
 
-      case 'CHOICE_SINGLE': {
+      case "CHOICE_SINGLE": {
         const optionIds = (q.options as { id: string }[]).map((o) => o.id);
 
         schema = z.enum(optionIds as [string, ...string[]]);
@@ -72,7 +67,7 @@ export const buildResponseSchema = (questions: unknown) => {
         break;
       }
 
-      case 'CHOICE_MULTI': {
+      case "CHOICE_MULTI": {
         const optionIds = (q.options as { id: string }[]).map((o) => o.id);
 
         schema = z.array(z.enum(optionIds as [string, ...string[]]));
@@ -88,7 +83,11 @@ export const buildResponseSchema = (questions: unknown) => {
         throw new Error(`Unsupported question type: ${q.type}`);
     }
 
-    if (!q.required && q.type !== 'BOOLEAN') {
+    const isVisible = !visibleQuestionIds || visibleQuestionIds.has(q.id);
+
+    if (!isVisible) {
+      schema = schema.optional();
+    } else if (!q.required && q.type !== "BOOLEAN") {
       schema = schema.optional();
     }
 
