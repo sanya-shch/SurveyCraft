@@ -3,6 +3,7 @@ import { prisma } from "../../prisma/prisma.js";
 import { AppError } from "../../shared/middleware/errorHandler.js";
 import { UpdateFormInput, UserFormsDto } from "./form.types.js";
 import { toJson } from "../../shared/utils/helpers.js";
+import { validateConditionGraph } from "../../shared/utils/condition.js";
 
 export const createForm = async ({
   title,
@@ -115,15 +116,28 @@ export const updateForm = async (formId: string, userId: string, data: UpdateFor
   const existingQuestions = form.questions;
   const incomingQuestions = data.questions;
 
-  // const existingMap = new Map(existingQuestions.map((q) => [q.id, q]));
+  const existingIds = new Set(existingQuestions.map((q) => q.id));
 
-  const incomingIds = new Set(incomingQuestions.filter((q: any) => q.id).map((q: any) => q.id));
+  // Питанням без клієнтського id призначаємо його самі до валідації графа,
+  // щоб condition інших питань могли на них посилатись і щоб id, який ми
+  // валідували, збігався з тим, що реально запишеться в БД.
+  const withResolvedIds = incomingQuestions.map((q: any) =>
+    !q.id || !existingIds.has(q.id) ? { ...q, id: q.id ?? crypto.randomUUID() } : q,
+  );
 
+  const graphValidation = validateConditionGraph(
+    withResolvedIds.map((q: any) => ({ id: q.id, order: q.order, condition: q.condition })),
+  );
+
+  if (!graphValidation.valid) {
+    throw new AppError(
+      `Некоректні умови показу питань: ${graphValidation.errors.map((e) => e.detail).join("; ")}`,
+      400,
+    );
+  }
+
+  const incomingIds = new Set(withResolvedIds.map((q: any) => q.id));
   const toDelete = existingQuestions.filter((q) => !incomingIds.has(q.id)).map((q) => q.id);
-
-  const toUpdate = incomingQuestions.filter((q: any) => q.id);
-
-  const toCreate = incomingQuestions.filter((q: any) => !q.id);
 
   return prisma.$transaction(async (tx) => {
     await tx.form.update({
@@ -141,7 +155,10 @@ export const updateForm = async (formId: string, userId: string, data: UpdateFor
       });
     }
 
-    for (const q of toUpdate) {
+    const resolvedToUpdate = withResolvedIds.filter((q: any) => existingIds.has(q.id));
+    const resolvedToCreate = withResolvedIds.filter((q: any) => !existingIds.has(q.id));
+
+    for (const q of resolvedToUpdate) {
       await tx.question.update({
         where: { id: q.id },
         data: {
@@ -152,13 +169,15 @@ export const updateForm = async (formId: string, userId: string, data: UpdateFor
           order: q.order,
           options: "options" in q ? toJson(q.options) : undefined,
           config: "config" in q ? toJson(q.config) : undefined,
+          condition: q.condition === undefined ? undefined : toJson(q.condition),
         },
       });
     }
 
-    if (toCreate.length) {
+    if (resolvedToCreate.length) {
       await tx.question.createMany({
-        data: toCreate.map((q: any) => ({
+        data: resolvedToCreate.map((q: any) => ({
+          id: q.id,
           text: q.text,
           description: q.description,
           type: q.type,
@@ -166,6 +185,7 @@ export const updateForm = async (formId: string, userId: string, data: UpdateFor
           order: q.order,
           options: "options" in q ? toJson(q.options) : undefined,
           config: "config" in q ? toJson(q.config) : undefined,
+          condition: q.condition == null ? undefined : toJson(q.condition),
           formId,
         })),
       });
@@ -221,8 +241,23 @@ export const duplicateForm = async (formId: string, userId: string) => {
       },
     });
 
+    // Копії питань отримують нові id (старі вже зайняті оригіналом), тому
+    // condition.rules[].questionId треба ремапнути на нові id - інакше умови
+    // в дублікаті посилатимуться на питання іншої (оригінальної) форми.
+    const idMap = new Map(form.questions.map((q) => [q.id, crypto.randomUUID()]));
+
+    const remapCondition = (condition: unknown): Prisma.InputJsonValue | undefined => {
+      if (!condition || typeof condition !== "object") return undefined;
+      const c = condition as { logic: "AND" | "OR"; rules: { questionId: string; operator: string; value: unknown }[] };
+      return {
+        logic: c.logic,
+        rules: c.rules.map((r) => ({ ...r, questionId: idMap.get(r.questionId) ?? r.questionId })),
+      } as Prisma.InputJsonValue;
+    };
+
     await tx.question.createMany({
       data: form.questions.map((q) => ({
+        id: idMap.get(q.id),
         text: q.text,
         description: q.description,
         type: q.type,
@@ -230,6 +265,7 @@ export const duplicateForm = async (formId: string, userId: string) => {
         order: q.order,
         options: Array.isArray(q.options) ? (q.options as Prisma.InputJsonValue) : [],
         config: q.config as Prisma.InputJsonValue,
+        condition: remapCondition(q.condition),
         formId: newForm.id,
       })),
     });

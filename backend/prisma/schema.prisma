@@ -51,6 +51,7 @@ model Question {
 
   options     Json?
   config       Json?
+  condition   Json?
 
   formId      String
   form        Form     @relation(fields: [formId], references: [id], onDelete: Cascade)
@@ -65,6 +66,12 @@ model Response {
   formId    String
 
   answers   Json
+  // Питання, які фактично були показані користувачу під час проходження
+  // (обчислюється сервером на основі condition кожного питання й наданих
+  // відповідей — не покладаємось на клієнта, щоб не можна було підробити
+  // приховані відповіді). Використовується аналітикою для розрізнення
+  // "приховано умовою" vs "показано, але пропущено".
+  visibleQuestionIds Json?
 
   createdAt DateTime @default(now())
 }

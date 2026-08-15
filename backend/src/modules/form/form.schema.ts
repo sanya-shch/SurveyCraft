@@ -5,12 +5,24 @@ export const createFormSchema = z.object({
   description: z.string().optional(),
 });
 
+const conditionRuleSchema = z.object({
+  questionId: z.string(),
+  operator: z.enum(['equals', 'notEquals', 'contains', 'in', 'gt', 'lt']),
+  value: z.union([z.string(), z.number(), z.boolean(), z.array(z.string())]),
+});
+
+export const conditionSchema = z.object({
+  logic: z.enum(['AND', 'OR']),
+  rules: z.array(conditionRuleSchema).min(1),
+});
+
 const base = {
   id: z.string().optional(),
   text: z.string().min(1),
   description: z.string().optional(),
   required: z.boolean().optional(),
   order: z.number(),
+  condition: conditionSchema.optional().nullable(),
 };
 
 const configSchema = z.object({

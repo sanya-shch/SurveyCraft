@@ -386,6 +386,64 @@ describe("updateForm", () => {
     });
   });
 
+  it("кидає 400 і не відкриває транзакцію, якщо condition утворює цикл", async () => {
+    (prisma.form.findUnique as any).mockResolvedValue(mockForm({ questions: [] }));
+
+    await expect(
+      updateForm(FORM_ID, OWNER_ID, {
+        title: "Форма",
+        questions: [
+          {
+            id: "q1",
+            text: "Q1",
+            type: "TEXT",
+            order: 0,
+            condition: { logic: "AND", rules: [{ questionId: "q2", operator: "equals", value: "y" }] },
+          },
+          {
+            id: "q2",
+            text: "Q2",
+            type: "TEXT",
+            order: 0,
+            condition: { logic: "AND", rules: [{ questionId: "q1", operator: "equals", value: "y" }] },
+          },
+        ],
+      } as any),
+    ).rejects.toMatchObject({ statusCode: 400 });
+
+    expect(prisma.$transaction).not.toHaveBeenCalled();
+  });
+
+  it("зберігає й ремапить умови для нового питання без id, посилаючись на нього самого через згенерований id", async () => {
+    (prisma.form.findUnique as any).mockResolvedValue(mockForm({ questions: [] }));
+    const { txQuestion } = setupTransactionMocks();
+
+    await updateForm(FORM_ID, OWNER_ID, {
+      title: "Форма",
+      questions: [
+        { id: "q1", text: "Q1", type: "TEXT", order: 0 },
+        {
+          text: "Q2 (нове)",
+          type: "TEXT",
+          order: 1,
+          condition: { logic: "AND", rules: [{ questionId: "q1", operator: "equals", value: "y" }] },
+        },
+      ],
+    } as any);
+
+    // q1 у цьому кейсі теж новий (existing questions порожні), тому обидва
+    // питання йдуть у createMany з клієнтським id "q1" збереженим як є.
+    expect(txQuestion.createMany).toHaveBeenCalledWith({
+      data: [
+        expect.objectContaining({ id: "q1", text: "Q1" }),
+        expect.objectContaining({
+          text: "Q2 (нове)",
+          condition: { logic: "AND", rules: [{ questionId: "q1", operator: "equals", value: "y" }] },
+        }),
+      ],
+    });
+  });
+
   it("повертає { success: true } при успішній транзакції", async () => {
     (prisma.form.findUnique as any).mockResolvedValue(mockForm({ questions: [] }));
     setupTransactionMocks();

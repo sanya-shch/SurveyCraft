@@ -78,6 +78,44 @@ describe("questionSchema — discriminated union за type", () => {
     const result = questionSchema.safeParse({ type: "TEXT", text: "", order: 0 });
     expect(result.success).toBe(false);
   });
+
+  it("condition необов'язковий, question валідний без нього", () => {
+    expect(questionSchema.safeParse({ ...base, type: "TEXT" }).success).toBe(true);
+  });
+
+  it("condition приймає null (явне 'без умови' при оновленні)", () => {
+    expect(questionSchema.safeParse({ ...base, type: "TEXT", condition: null }).success).toBe(true);
+  });
+
+  it("валідний condition з AND/OR і одним із операторів", () => {
+    const result = questionSchema.safeParse({
+      ...base,
+      type: "TEXT",
+      condition: {
+        logic: "AND",
+        rules: [{ questionId: "q1", operator: "equals", value: "yes" }],
+      },
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it("condition з порожнім rules — невалідний", () => {
+    const result = questionSchema.safeParse({
+      ...base,
+      type: "TEXT",
+      condition: { logic: "AND", rules: [] },
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it("condition з невідомим оператором — невалідний", () => {
+    const result = questionSchema.safeParse({
+      ...base,
+      type: "TEXT",
+      condition: { logic: "AND", rules: [{ questionId: "q1", operator: "startsWith", value: "y" }] },
+    });
+    expect(result.success).toBe(false);
+  });
 });
 
 describe("updateFormSchema", () => {
