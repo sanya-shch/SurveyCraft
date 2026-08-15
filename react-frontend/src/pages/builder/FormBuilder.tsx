@@ -15,6 +15,7 @@ import TextConfigEditor from "./components/editors/TextConfigEditor";
 import NumberConfigEditor from "./components/editors/NumberConfigEditor";
 import OptionsConfigEditor from "./components/editors/OptionsConfigEditor";
 import BooleanConfigEditor from "./components/editors/BooleanConfigEditor";
+import ConditionEditor from "./components/editors/ConditionEditor";
 import { calendarIcon } from "../../components/ui/icons";
 import { ErrorInfo } from "../../components/ui/ErrorInfo";
 
@@ -88,7 +89,6 @@ export default function FormBuilder() {
         const isChoice = ["CHOICE_SINGLE", "CHOICE_MULTI"].includes(q.type);
         return {
           ...q,
-          id: q.id?.startsWith("temp-") ? undefined : q.id,
           options: isChoice ? q.options : [],
           config:
             q.type === "TEXT" || q.type === "NUMBER" || isChoice || q.type === "BOOLEAN"
@@ -267,6 +267,16 @@ export default function FormBuilder() {
                               onDuplicate={() => duplicateQuestion(index)}
                               error={errors[`q-${index}`]}
                             >
+                              <ConditionEditor
+                                condition={question.condition}
+                                currentOrder={question.order}
+                                allQuestions={form.questions}
+                                onChange={(next) => updateQuestion(index, { condition: next })}
+                                error={errors[`q-${index}-condition`]}
+                              />
+
+                              <hr className="border-slate-100 my-3" />
+
                               {question.type === "TEXT" && (
                                 <TextConfigEditor
                                   config={question.config}

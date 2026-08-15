@@ -1,3 +1,7 @@
+import type { ConditionGroup } from "@surveycraft/shared-types";
+
+export type { ConditionGroup, ConditionOperator, ConditionRule } from "@surveycraft/shared-types";
+
 export type QuestionType =
   | "TEXT"
   | "CHOICE_SINGLE"
@@ -34,6 +38,7 @@ export interface Question {
   order: number;
   options: QuestionOption[];
   config: QuestionConfig | null;
+  condition?: ConditionGroup | null;
 }
 
 export interface FormState {

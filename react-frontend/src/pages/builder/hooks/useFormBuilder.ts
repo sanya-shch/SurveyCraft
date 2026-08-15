@@ -1,5 +1,6 @@
 import { useState, useCallback } from "react";
 import { type FormState, type Question, type QuestionType } from "../../../types/formBuilder";
+import { validateConditionGraph } from "@surveycraft/condition-engine";
 
 const INITIAL_STATE: FormState = {
   title: "Нове опитування",
@@ -21,6 +22,23 @@ export function useFormBuilder(initialData?: FormState) {
     formData.questions.forEach((q, index) => {
       if (!q.text.trim()) newErrors[`q-${index}`] = "Текст питання обов'язковий";
     });
+
+    const questionsWithId = formData.questions.filter((q): q is Question & { id: string } =>
+      Boolean(q.id),
+    );
+    const graph = validateConditionGraph(
+      questionsWithId.map((q) => ({ id: q.id, order: q.order, condition: q.condition })),
+    );
+
+    if (!graph.valid) {
+      const indexByQuestionId = new Map(formData.questions.map((q, i) => [q.id, i]));
+      for (const err of graph.errors) {
+        const index = indexByQuestionId.get(err.questionId);
+        if (index !== undefined) {
+          newErrors[`q-${index}-condition`] = err.detail;
+        }
+      }
+    }
 
     return newErrors;
   }, []);
@@ -120,9 +138,10 @@ export function useFormBuilder(initialData?: FormState) {
         const source = prev.questions[index];
         const duplicated: Question = {
           ...source,
-          id: undefined,
+          id: crypto.randomUUID(),
           options: [...source.options],
           config: source.config ? { ...source.config } : null,
+          condition: null,
         };
 
         const updated = [...prev.questions];
@@ -182,6 +201,7 @@ export function useFormBuilder(initialData?: FormState) {
 
       setForm((prev) => {
         const newQuestion: Question = {
+          id: crypto.randomUUID(),
           type,
           text: "",
           description: "",
