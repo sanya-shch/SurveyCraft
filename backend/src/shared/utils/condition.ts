@@ -9,26 +9,14 @@
  * режим проходження).
  */
 
-export type ConditionOperator =
-  | "equals"
-  | "notEquals"
-  | "contains"
-  | "in"
-  | "gt"
-  | "lt";
+import type {
+  ConditionGroup,
+  ConditionOperator,
+  ConditionRule,
+  ConditionValue,
+} from "@surveycraft/shared-types";
 
-export type ConditionValue = string | number | boolean | string[];
-
-export interface ConditionRule {
-  questionId: string;
-  operator: ConditionOperator;
-  value: ConditionValue;
-}
-
-export interface ConditionGroup {
-  logic: "AND" | "OR";
-  rules: ConditionRule[];
-}
+export type { ConditionGroup, ConditionOperator, ConditionRule, ConditionValue };
 
 /** Відповіді, зібрані до поточного моменту проходження форми: questionId -> значення. */
 export type AnswersMap = Record<string, unknown>;

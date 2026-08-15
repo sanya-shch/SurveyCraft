@@ -9,7 +9,6 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
-    "prisma": "npx prisma migrate dev --name init",
     "prisma_migrate": "npx prisma migrate dev",
     "prisma_push": "npx prisma db push",
     "prisma_generate": "npx prisma generate",
@@ -22,6 +21,7 @@
   "dependencies": {
     "@prisma/adapter-pg": "^7.8.0",
     "@prisma/client": "^7.8.0",
+    "@surveycraft/shared-types": "workspace:*",
     "bcrypt": "^6.0.0",
     "bullmq": "^6.0.11",
     "cookie-parser": "^1.4.7",

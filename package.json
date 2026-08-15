@@ -1,0 +1,21 @@
+{
+  "name": "surveycraft",
+  "private": true,
+  "version": "1.0.0",
+  "description": "SurveyCraft monorepo: backend (NestJS-style Express + Prisma + BullMQ), React frontend, Vue analytics micro-frontend",
+  "engines": {
+    "node": ">=20",
+    "pnpm": ">=9"
+  },
+  "scripts": {
+    "dev:backend": "pnpm --filter survey-saas dev",
+    "dev:worker": "pnpm --filter survey-saas worker",
+    "dev:frontend": "pnpm --filter form-builder-client dev",
+    "dev:analytics": "pnpm --filter vue-analytics dev",
+    "test": "pnpm -r test",
+    "test:backend": "pnpm --filter survey-saas test",
+    "docker:up": "docker compose up -d",
+    "docker:down": "docker compose down",
+    "docker:reset": "docker compose down -v && docker compose up -d"
+  }
+}
