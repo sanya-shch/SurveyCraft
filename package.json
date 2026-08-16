@@ -3,6 +3,7 @@
   "private": true,
   "version": "1.0.0",
   "description": "SurveyCraft monorepo: backend (NestJS-style Express + Prisma + BullMQ), React frontend, Vue analytics micro-frontend",
+  "packageManager": "pnpm@11.21.0",
   "engines": {
     "node": ">=20",
     "pnpm": ">=9"
