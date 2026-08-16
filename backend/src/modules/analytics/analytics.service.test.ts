@@ -1,8 +1,14 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const { prisma } = await import("../../prisma/prisma.js");
-const { getFormAnalytics, getQuestionAnalytics, getResponses, getResponseById } =
-  await import("./analytics.service.js");
+const {
+  getFormAnalytics,
+  getQuestionAnalytics,
+  getResponses,
+  getResponseById,
+  buildFormPaths,
+  getFormPaths,
+} = await import("./analytics.service.js");
 
 vi.mock("../../prisma/prisma.js", () => ({
   prisma: {
@@ -355,5 +361,136 @@ describe("getResponseById", () => {
 
     expect(result.answers).toHaveLength(1);
     expect(result.answers[0].questionId).toBe("q-bool");
+  });
+});
+
+describe("getFormAnalytics — visibility stats (conditional logic)", () => {
+  it("shownCount/hiddenCount рахуються по visibleQuestionIds відповіді", async () => {
+    (prisma.form.findUnique as any).mockResolvedValue(mockForm({ questions: [questions[0]] }));
+    (prisma.response.findMany as any).mockResolvedValue([
+      { answers: { "q-text": "Київ" }, visibleQuestionIds: ["q-text"] },
+      { answers: { "q-text": "Львів" }, visibleQuestionIds: ["q-text"] },
+      { answers: {}, visibleQuestionIds: [] }, // q-text приховане умовою для цього респондента
+    ]);
+
+    const result = await getFormAnalytics(FORM_ID, OWNER_ID);
+    const q = result.questions[0] as any;
+
+    expect(q.shownCount).toBe(2);
+    expect(q.hiddenCount).toBe(1);
+    expect(q.skippedCount).toBe(0); // обидва, хто бачив, відповіли
+  });
+
+  it("skippedCount: показане, але не обов'язкове і не заповнене питання", async () => {
+    (prisma.form.findUnique as any).mockResolvedValue(mockForm({ questions: [questions[0]] }));
+    (prisma.response.findMany as any).mockResolvedValue([
+      { answers: { "q-text": "Київ" }, visibleQuestionIds: ["q-text"] },
+      { answers: {}, visibleQuestionIds: ["q-text"] }, // бачив, але не відповів (необов'язкове)
+    ]);
+
+    const result = await getFormAnalytics(FORM_ID, OWNER_ID);
+    const q = result.questions[0] as any;
+
+    expect(q.shownCount).toBe(2);
+    expect(q.hiddenCount).toBe(0);
+    expect(q.skippedCount).toBe(1);
+  });
+
+  it("legacy-відповіді без visibleQuestionIds: видимість виводиться з наявності ключа в answers", async () => {
+    (prisma.form.findUnique as any).mockResolvedValue(mockForm({ questions: [questions[0]] }));
+    (prisma.response.findMany as any).mockResolvedValue([
+      { answers: { "q-text": "Київ" } }, // visibleQuestionIds відсутній (стара відповідь)
+    ]);
+
+    const result = await getFormAnalytics(FORM_ID, OWNER_ID);
+    const q = result.questions[0] as any;
+
+    expect(q.shownCount).toBe(1);
+    expect(q.hiddenCount).toBe(0);
+  });
+});
+
+describe("buildFormPaths", () => {
+  const orderedQuestions = [
+    { id: "q1", text: "Питання 1", order: 0 },
+    { id: "q2", text: "Питання 2 (умовне)", order: 1 },
+    { id: "q3", text: "Питання 3", order: 2 },
+  ];
+
+  it("рахує totalResponses і базові переходи для лінійного (без умов) проходження", () => {
+    const responses = [
+      { answers: { q1: "a", q2: "b", q3: "c" }, visibleQuestionIds: ["q1", "q2", "q3"] },
+      { answers: { q1: "a", q2: "b", q3: "c" }, visibleQuestionIds: ["q1", "q2", "q3"] },
+    ];
+
+    const result = buildFormPaths(orderedQuestions, responses);
+
+    expect(result.totalResponses).toBe(2);
+    expect(result.nodes).toEqual([
+      { questionId: "q1", text: "Питання 1", order: 0, shownCount: 2 },
+      { questionId: "q2", text: "Питання 2 (умовне)", order: 1, shownCount: 2 },
+      { questionId: "q3", text: "Питання 3", order: 2, shownCount: 2 },
+    ]);
+    expect(result.edges).toEqual(
+      expect.arrayContaining([
+        { fromQuestionId: null, toQuestionId: "q1", count: 2 },
+        { fromQuestionId: "q1", toQuestionId: "q2", count: 2 },
+        { fromQuestionId: "q2", toQuestionId: "q3", count: 2 },
+      ]),
+    );
+  });
+
+  it("пропускає приховане q2 у переході - ребро йде напряму q1 -> q3", () => {
+    const responses = [
+      { answers: { q1: "a", q3: "c" }, visibleQuestionIds: ["q1", "q3"] }, // q2 приховане
+      { answers: { q1: "a", q2: "b", q3: "c" }, visibleQuestionIds: ["q1", "q2", "q3"] },
+    ];
+
+    const result = buildFormPaths(orderedQuestions, responses);
+
+    const q1ToQ3 = result.edges.find((e) => e.fromQuestionId === "q1" && e.toQuestionId === "q3");
+    const q1ToQ2 = result.edges.find((e) => e.fromQuestionId === "q1" && e.toQuestionId === "q2");
+
+    expect(q1ToQ3).toEqual({ fromQuestionId: "q1", toQuestionId: "q3", count: 1 });
+    expect(q1ToQ2).toEqual({ fromQuestionId: "q1", toQuestionId: "q2", count: 1 });
+
+    const q2Node = result.nodes.find((n) => n.questionId === "q2");
+    expect(q2Node?.shownCount).toBe(1);
+  });
+
+  it("порожній список відповідей - нулі всюди, без падіння", () => {
+    const result = buildFormPaths(orderedQuestions, []);
+
+    expect(result.totalResponses).toBe(0);
+    expect(result.edges).toEqual([]);
+    expect(result.nodes.every((n) => n.shownCount === 0)).toBe(true);
+  });
+});
+
+describe("getFormPaths", () => {
+  it("кидає 404/403 за ownership-перевіркою, як і інші analytics-ендпоінти", async () => {
+    (prisma.form.findUnique as any).mockResolvedValue(null);
+    await expect(getFormPaths(FORM_ID, OWNER_ID)).rejects.toMatchObject({ statusCode: 404 });
+
+    (prisma.form.findUnique as any).mockResolvedValue(mockForm());
+    await expect(getFormPaths(FORM_ID, OTHER_USER_ID)).rejects.toMatchObject({ statusCode: 403 });
+  });
+
+  it("сортує questions за order перед побудовою шляхів", async () => {
+    (prisma.form.findUnique as any).mockResolvedValue(
+      mockForm({
+        questions: [
+          { id: "q-b", order: 1, text: "Друге" },
+          { id: "q-a", order: 0, text: "Перше" },
+        ],
+      }),
+    );
+    (prisma.response.findMany as any).mockResolvedValue([
+      { answers: { "q-a": "x", "q-b": "y" }, visibleQuestionIds: ["q-a", "q-b"] },
+    ]);
+
+    const result = await getFormPaths(FORM_ID, OWNER_ID);
+
+    expect(result.nodes.map((n) => n.questionId)).toEqual(["q-a", "q-b"]);
   });
 });

@@ -1,39 +1,89 @@
-import { Answers } from '../response/response.types.js';
+import { Answers } from "../response/response.types.js";
+
+/**
+ * Скільки респондентів бачили це питання взагалі (shownCount, залежить від
+ * condition), скільки з тих, хто бачив, все ж не відповіли (skippedCount -
+ * можливо тільки для НЕобов'язкових питань, required+видиме завжди
+ * відповідається за конструкцією submitResponse), і скільки не бачили його
+ * через умову (hiddenCount = totalResponses - shownCount). Присутнє на
+ * кожному варіанті QuestionOverview, щоб фронтенд міг відрізнити
+ * "приховано умовою" від "показано, але пропущено" - для форм без
+ * conditional logic shownCount завжди дорівнює totalResponses.
+ */
+export type QuestionVisibilityStats = {
+  shownCount: number;
+  skippedCount: number;
+  hiddenCount: number;
+};
 
 export type QuestionOverview =
-  | {
+  | ({
       id: string;
-      type: 'TEXT' | 'DATE';
+      type: "TEXT" | "DATE";
       text: string;
       preview: { value: string; count: number }[];
-    }
-  | {
+    } & QuestionVisibilityStats)
+  | ({
       id: string;
-      type: 'NUMBER';
+      type: "NUMBER";
       text: string;
       stats: {
         avg: number;
         min: number;
         max: number;
       };
-    }
-  | {
+    } & QuestionVisibilityStats)
+  | ({
       id: string;
-      type: 'CHOICE_SINGLE' | 'CHOICE_MULTI';
+      type: "CHOICE_SINGLE" | "CHOICE_MULTI";
       text: string;
       distribution: { optionId: string; count: number; text: string }[];
-    }
-  | {
+    } & QuestionVisibilityStats)
+  | ({
       id: string;
-      type: 'BOOLEAN';
+      type: "BOOLEAN";
       text: string;
       trueCount: number;
       falseCount: number;
-    };
+    } & QuestionVisibilityStats);
 
 export type FormAnalyticsDto = {
   totalResponses: number;
   questions: QuestionOverview[];
+};
+
+/**
+ * Один вузол шляху проходження форми - питання з кількістю респондентів,
+ * що його бачили (shownCount тут еквівалентний QuestionVisibilityStats.shownCount).
+ */
+export type QuestionPathNode = {
+  questionId: string;
+  text: string;
+  order: number;
+  shownCount: number;
+};
+
+/**
+ * Перехід між двома послідовними ВИДИМИМИ питаннями (у порядку, в якому їх
+ * фактично бачив респондент - не обов'язково сусідні за order, якщо
+ * проміжні приховані умовою). fromQuestionId: null означає "початок форми"
+ * (перехід із стартового стану до першого показаного питання).
+ *
+ * ВАЖЛИВО: це НЕ funnel-аналітика в класичному сенсі (відсоток тих, хто
+ * почав, але не завершив) - Response створюється лише при успішному
+ * повному сабміті (submitResponse), проміжні/незавершені проходження зараз
+ * ніде не персистяться. Це "популярність гілок" серед ЗАВЕРШЕНИХ відповідей.
+ */
+export type QuestionPathEdge = {
+  fromQuestionId: string | null;
+  toQuestionId: string;
+  count: number;
+};
+
+export type FormPathsDto = {
+  totalResponses: number;
+  nodes: QuestionPathNode[];
+  edges: QuestionPathEdge[];
 };
 
 export type QuestionAnalyticsDto =
@@ -42,7 +92,7 @@ export type QuestionAnalyticsDto =
         id: string;
         text: string;
         description: string | null;
-        type: 'TEXT' | 'DATE';
+        type: "TEXT" | "DATE";
       };
       totalAnswers: number;
       distribution: { value: string; count: number }[];
@@ -53,7 +103,7 @@ export type QuestionAnalyticsDto =
         id: string;
         text: string;
         description: string | null;
-        type: 'NUMBER';
+        type: "NUMBER";
       };
       totalAnswers: number;
       stats: {
@@ -68,7 +118,7 @@ export type QuestionAnalyticsDto =
         id: string;
         text: string;
         description: string | null;
-        type: 'CHOICE_SINGLE' | 'CHOICE_MULTI';
+        type: "CHOICE_SINGLE" | "CHOICE_MULTI";
       };
       totalAnswers: number;
       distribution: { optionId: string; count: number; text: string }[];
@@ -78,7 +128,7 @@ export type QuestionAnalyticsDto =
         id: string;
         text: string;
         description: string | null;
-        type: 'BOOLEAN';
+        type: "BOOLEAN";
       };
       totalAnswers: number;
       trueCount: number;

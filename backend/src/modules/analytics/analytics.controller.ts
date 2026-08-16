@@ -1,24 +1,22 @@
-import { Request, Response, NextFunction } from 'express';
+import { Request, Response, NextFunction } from "express";
 import {
   getFormAnalytics,
+  getFormPaths,
   getQuestionAnalytics,
   getResponseById,
   getResponses,
-} from './analytics.service.js';
+} from "./analytics.service.js";
 import {
+  FormPathsDto,
   GetResponsesQuery,
   QuestionAnalyticsDto,
   ResponseDetailsDto,
   ResponseListDto,
-} from './analytics.types.js';
-import { asyncHandler } from '../../shared/utils/asyncHandler.js';
-import { AuthLocals } from '../../shared/middleware/auth.js';
+} from "./analytics.types.js";
+import { asyncHandler } from "../../shared/utils/asyncHandler.js";
+import { AuthLocals } from "../../shared/middleware/auth.js";
 
-export const getAnalyticsHandler = async (
-  req: any,
-  res: Response,
-  next: NextFunction
-) => {
+export const getAnalyticsHandler = async (req: any, res: Response, next: NextFunction) => {
   try {
     const { formId } = req.params;
     const userId = (res.locals as AuthLocals).userId;
@@ -37,7 +35,7 @@ export const getQuestionAnalyticsHandler = asyncHandler(
       formId: string;
       questionId: string;
     }>,
-    res: Response<QuestionAnalyticsDto>
+    res: Response<QuestionAnalyticsDto>,
   ) => {
     const { formId, questionId } = req.params;
     const userId = (res.locals as AuthLocals).userId;
@@ -45,13 +43,24 @@ export const getQuestionAnalyticsHandler = asyncHandler(
     const data = await getQuestionAnalytics(formId, questionId, userId);
 
     res.json(data);
-  }
+  },
+);
+
+export const getFormPathsHandler = asyncHandler(
+  async (req: Request<{ formId: string }>, res: Response<FormPathsDto>) => {
+    const { formId } = req.params;
+    const userId = (res.locals as AuthLocals).userId;
+
+    const data = await getFormPaths(formId, userId);
+
+    res.json(data);
+  },
 );
 
 export const getResponsesHandler = asyncHandler(
   async (
     req: Request<{ formId: string }, ResponseListDto, {}, GetResponsesQuery>,
-    res: Response<ResponseListDto>
+    res: Response<ResponseListDto>,
   ) => {
     const { formId } = req.params;
     const userId = (res.locals as AuthLocals).userId;
@@ -62,7 +71,7 @@ export const getResponsesHandler = asyncHandler(
     const data = await getResponses(formId, userId, page, limit);
 
     res.json(data);
-  }
+  },
 );
 
 export const getResponseByIdHandler = asyncHandler(
@@ -74,7 +83,7 @@ export const getResponseByIdHandler = asyncHandler(
       },
       ResponseDetailsDto
     >,
-    res: Response<ResponseDetailsDto>
+    res: Response<ResponseDetailsDto>,
   ) => {
     const { formId, responseId } = req.params;
     const userId = (res.locals as AuthLocals).userId;
@@ -82,5 +91,5 @@ export const getResponseByIdHandler = asyncHandler(
     const data = await getResponseById(formId, responseId, userId);
 
     res.json(data);
-  }
+  },
 );
