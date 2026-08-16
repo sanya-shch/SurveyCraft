@@ -1,6 +1,6 @@
 import { useParams, useSearchParams } from "react-router-dom";
 import AnalyticsHeader from "./components/AnalyticsHeader";
-import OverviewTab from "./components/OverviewTab";
+import VueAnalyticsHost from "./components/VueAnalyticsHost";
 import ResponsesTab from "./components/ResponsesTab";
 
 export default function FormAnalyticsPage() {
@@ -41,7 +41,7 @@ export default function FormAnalyticsPage() {
 
         <div className="mt-4">
           {activeTab === "overview" ? (
-            <OverviewTab formId={formId} />
+            <VueAnalyticsHost formId={formId} />
           ) : (
             <ResponsesTab formId={formId} />
           )}

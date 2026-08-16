@@ -1,0 +1,24 @@
+{
+  "name": "vue-analytics",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vue-tsc --noEmit && vite build",
+    "build:federation": "vite build",
+    "preview": "vite preview --port 5174"
+  },
+  "dependencies": {
+    "@surveycraft/condition-engine": "workspace:*",
+    "@surveycraft/shared-types": "workspace:*",
+    "vue": "^3.5.13"
+  },
+  "devDependencies": {
+    "@originjs/vite-plugin-federation": "^1.4.1",
+    "@vitejs/plugin-vue": "^6.0.8",
+    "typescript": "~5.7.2",
+    "vite": "^8.2.1",
+    "vue-tsc": "^2.1.10"
+  }
+}
