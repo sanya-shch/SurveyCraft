@@ -2,6 +2,7 @@ import { useParams } from "react-router-dom";
 import { type FormAnswers } from "../../types/formViewer";
 import { usePublicFormQuery, useSubmitResponsesMutation } from "./hooks/usePublicForm";
 import FormViewer from "./FormViewer";
+import QuestionStepper from "./QuestionStepper";
 import { useState } from "react";
 
 interface ExpectedError {
@@ -19,6 +20,8 @@ export default function PublicFormPage() {
   const { data: formData, isLoading, error } = usePublicFormQuery(shareId);
 
   const [formServerErrors, setFormServerErrors] = useState<Record<string, string>>({});
+
+  const [mode, setMode] = useState<"all" | "step">("all");
 
   const {
     mutate: submitResponses,
@@ -140,14 +143,45 @@ export default function PublicFormPage() {
 
   return (
     <div className={isSubmitting ? "opacity-60 pointer-events-none transition-opacity" : ""}>
-      <FormViewer
-        formTitle={formData.title}
-        formDescription={formData.description}
-        questions={formData.questions}
-        serverErrors={formServerErrors}
-        onClearServerError={handleClearServerError}
-        onSubmit={handleFormSubmit}
-      />
+      <div className="fixed top-4 right-4 z-10 flex gap-1 bg-white p-1 rounded-xl border border-slate-200 shadow-sm">
+        {(
+          [
+            { key: "all", label: "Усі питання" },
+            { key: "step", label: "По одному" },
+          ] as const
+        ).map((opt) => (
+          <button
+            key={opt.key}
+            type="button"
+            onClick={() => setMode(opt.key)}
+            className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors cursor-pointer ${
+              mode === opt.key ? "bg-indigo-600 text-white" : "text-slate-500 hover:text-slate-800"
+            }`}
+          >
+            {opt.label}
+          </button>
+        ))}
+      </div>
+
+      {mode === "all" ? (
+        <FormViewer
+          formTitle={formData.title}
+          formDescription={formData.description}
+          questions={formData.questions}
+          serverErrors={formServerErrors}
+          onClearServerError={handleClearServerError}
+          onSubmit={handleFormSubmit}
+        />
+      ) : (
+        <QuestionStepper
+          formTitle={formData.title}
+          formDescription={formData.description}
+          questions={formData.questions}
+          serverErrors={formServerErrors}
+          onClearServerError={handleClearServerError}
+          onSubmit={handleFormSubmit}
+        />
+      )}
     </div>
   );
 }
