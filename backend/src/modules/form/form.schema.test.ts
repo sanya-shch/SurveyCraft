@@ -112,7 +112,10 @@ describe("questionSchema — discriminated union за type", () => {
     const result = questionSchema.safeParse({
       ...base,
       type: "TEXT",
-      condition: { logic: "AND", rules: [{ questionId: "q1", operator: "startsWith", value: "y" }] },
+      condition: {
+        logic: "AND",
+        rules: [{ questionId: "q1", operator: "startsWith", value: "y" }],
+      },
     });
     expect(result.success).toBe(false);
   });

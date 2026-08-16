@@ -187,8 +187,9 @@ export default function ConditionEditor({
                   onClick={() => removeRule(index)}
                   className="ml-auto text-slate-300 hover:text-rose-500 transition-colors cursor-pointer p-1"
                   title="Прибрати цю умову"
+                  aria-label="Прибрати цю умову"
                 >
-                  ✕
+                  <span aria-hidden="true">✕</span>
                 </button>
               </div>
             );

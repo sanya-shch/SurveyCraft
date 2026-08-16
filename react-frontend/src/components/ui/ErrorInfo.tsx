@@ -8,6 +8,7 @@ export const ErrorInfo = ({ errorText, variant = "text" }: ErrorInfoProps) => {
 
   return (
     <div
+      role="alert"
       className={`
         flex items-center text-rose-600 text-xs animate-in slide-in-from-top-1
         ${

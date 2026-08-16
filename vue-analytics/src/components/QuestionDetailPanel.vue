@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { onMounted, onUnmounted, ref } from "vue";
 import type { QuestionAnalyticsDto } from "@surveycraft/shared-types";
 
 defineProps<{
@@ -7,19 +8,44 @@ defineProps<{
   error: string | null;
 }>();
 
-defineEmits<{ (e: "close"): void }>();
+const emit = defineEmits<{ (e: "close"): void }>();
+
+const closeButtonRef = ref<HTMLButtonElement | null>(null);
+
+const handleKeydown = (e: KeyboardEvent) => {
+  if (e.key === "Escape") emit("close");
+};
+
+onMounted(() => {
+  document.addEventListener("keydown", handleKeydown);
+  document.body.style.overflow = "hidden";
+  closeButtonRef.value?.focus();
+});
+
+onUnmounted(() => {
+  document.removeEventListener("keydown", handleKeydown);
+  document.body.style.overflow = "";
+});
 </script>
 
 <template>
-  <div class="overlay" @click.self="$emit('close')">
-    <aside class="panel">
-      <button type="button" class="close-btn" @click="$emit('close')">✕</button>
+  <div class="overlay" role="presentation" @click.self="$emit('close')">
+    <aside class="panel" role="dialog" aria-modal="true" aria-labelledby="question-detail-title">
+      <button
+        ref="closeButtonRef"
+        type="button"
+        class="close-btn"
+        aria-label="Закрити панель деталей"
+        @click="$emit('close')"
+      >
+        <span aria-hidden="true">✕</span>
+      </button>
 
-      <div v-if="isLoading" class="state-msg">Завантаження...</div>
-      <div v-else-if="error" class="state-msg state-msg--error">{{ error }}</div>
+      <div v-if="isLoading" class="state-msg" role="status">Завантаження...</div>
+      <div v-else-if="error" class="state-msg state-msg--error" role="alert">{{ error }}</div>
 
       <template v-else-if="data">
-        <h2 class="title">{{ data.question.text || "Питання без назви" }}</h2>
+        <h2 id="question-detail-title" class="title">{{ data.question.text || "Питання без назви" }}</h2>
         <p v-if="data.question.description" class="description">{{ data.question.description }}</p>
         <p class="total">Відповідей: {{ data.totalAnswers }}</p>
 

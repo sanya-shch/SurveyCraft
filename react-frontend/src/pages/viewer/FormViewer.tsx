@@ -116,6 +116,8 @@ export default function FormViewer({
         {visibleQuestions.map((question, index) => {
           const qId = question.id || `q-${index}`;
           const hasError = !!combinedErrors[qId];
+          const labelId = `${qId}-label`;
+          const errorId = `${qId}-error`;
 
           return (
             <div
@@ -128,9 +130,17 @@ export default function FormViewer({
               }`}
             >
               <div>
-                <label className="text-base font-bold text-slate-800 flex items-center gap-1">
+                <label
+                  id={labelId}
+                  htmlFor={qId}
+                  className="text-base font-bold text-slate-800 flex items-center gap-1"
+                >
                   {question.text || `Питання №${index + 1}`}
-                  {question.required && <span className="text-rose-500">*</span>}
+                  {question.required && (
+                    <span className="text-rose-500" aria-label="обов'язкове питання">
+                      *
+                    </span>
+                  )}
                 </label>
                 {question.description && (
                   <p className="text-xs text-slate-400 mt-0.5">{question.description}</p>
@@ -142,9 +152,16 @@ export default function FormViewer({
                 qId={qId}
                 value={answers[qId]}
                 onChange={(value) => handleAnswerChange(qId, value)}
+                labelledBy={labelId}
+                describedBy={hasError ? errorId : undefined}
+                invalid={hasError}
               />
 
-              {hasError && <ErrorInfo errorText={combinedErrors[qId]} />}
+              {hasError && (
+                <div id={errorId}>
+                  <ErrorInfo errorText={combinedErrors[qId]} />
+                </div>
+              )}
             </div>
           );
         })}

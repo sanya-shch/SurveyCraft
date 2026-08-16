@@ -43,7 +43,9 @@ cp .env.example .env
 cp backend/.env.example backend/.env
 pnpm docker:up              # Postgres + Redis via docker-compose
 
-cd backend && npx prisma migrate dev && cd ..
+cd backend
+npx prisma migrate dev
+npx prisma generate
 
 pnpm dev:backend            # terminal 1
 pnpm dev:frontend           # terminal 2 - React app on :5173

@@ -56,6 +56,7 @@ export default function QuestionCard({
               value={question.text}
               onChange={(e) => onUpdate({ text: e.target.value })}
               placeholder="Запитання без назви"
+              aria-label="Текст питання"
               className="w-full text-base font-semibold text-slate-800 placeholder:text-slate-300 bg-transparent border-b border-transparent hover:border-slate-100 focus:border-indigo-500 focus:outline-none pb-1 transition-colors"
             />
           </div>
@@ -65,6 +66,7 @@ export default function QuestionCard({
             value={question.description || ""}
             onChange={(e) => onUpdate({ description: e.target.value })}
             placeholder="Додати опис (необов'язково)..."
+            aria-label="Опис питання (необов'язково)"
             className="w-full text-xs text-slate-500 placeholder:text-slate-300 bg-transparent border-b border-transparent hover:border-slate-100 focus:border-indigo-500 focus:outline-none pb-1 transition-colors"
           />
 
@@ -112,9 +114,11 @@ export default function QuestionCard({
             type="button"
             onClick={onDuplicate}
             className="rounded-lg p-1.5 hover:bg-slate-50 hover:text-slate-600 transition-colors cursor-pointer"
+            aria-label="Дублювати питання"
             title="Дублювати питання"
           >
             <svg
+              aria-hidden="true"
               className="h-4.5 w-4.5"
               fill="none"
               viewBox="0 0 24 24"
@@ -133,9 +137,11 @@ export default function QuestionCard({
             type="button"
             onClick={onDelete}
             className="rounded-lg p-1.5 hover:bg-rose-50 hover:text-rose-600 transition-colors cursor-pointer"
+            aria-label="Видалити питання"
             title="Видалити питання"
           >
             <svg
+              aria-hidden="true"
               className="h-4.5 w-4.5"
               fill="none"
               viewBox="0 0 24 24"

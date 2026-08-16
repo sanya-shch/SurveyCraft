@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { type Question } from "../../types/formBuilder";
 import { type FormAnswers } from "../../types/formViewer";
 import { ErrorInfo } from "../../components/ui/ErrorInfo";
@@ -45,6 +45,13 @@ export default function QuestionStepper({
   });
   const [currentIndex, setCurrentIndex] = useState(0);
   const [localErrors, setLocalErrors] = useState<Record<string, string>>({});
+
+  const stepHeadingRef = useRef<HTMLElement>(null);
+
+  useEffect(() => {
+    stepHeadingRef.current?.focus();
+  }, [currentIndex]);
+
   const [isSubmitAttempted, setIsSubmitAttempted] = useState(false);
 
   const isReview = currentIndex >= path.length;
@@ -133,7 +140,15 @@ export default function QuestionStepper({
         {isReview ? (
           <div className="bg-white rounded-2xl border border-slate-200 p-6 sm:p-8 shadow-sm space-y-5 animate-in fade-in duration-200">
             <div>
-              <h2 className="text-xl font-bold text-slate-900">Готово, перевірте відповіді</h2>
+              <h2
+                ref={(el) => {
+                  stepHeadingRef.current = el;
+                }}
+                tabIndex={-1}
+                className="text-xl font-bold text-slate-900 focus:outline-none"
+              >
+                Готово, перевірте відповіді
+              </h2>
               {formDescription && <p className="text-sm text-slate-500 mt-1">{formDescription}</p>}
             </div>
 
@@ -183,10 +198,24 @@ export default function QuestionStepper({
               key={current.id || currentIndex}
               className="bg-white rounded-2xl border border-slate-200 p-6 sm:p-8 shadow-sm space-y-5 animate-in fade-in slide-in-from-right-2 duration-200"
             >
-              <div>
-                <label className="text-lg font-bold text-slate-800 flex items-center gap-1">
+              <div
+                ref={(el) => {
+                  stepHeadingRef.current = el;
+                }}
+                tabIndex={-1}
+                className="focus:outline-none"
+              >
+                <label
+                  id={`${current.id || currentIndex}-label`}
+                  htmlFor={current.id || `q-${currentIndex}`}
+                  className="text-lg font-bold text-slate-800 flex items-center gap-1"
+                >
                   {current.text || `Питання №${currentIndex + 1}`}
-                  {current.required && <span className="text-rose-500">*</span>}
+                  {current.required && (
+                    <span className="text-rose-500" aria-label="обов'язкове питання">
+                      *
+                    </span>
+                  )}
                 </label>
                 {current.description && (
                   <p className="text-xs text-slate-400 mt-1">{current.description}</p>
@@ -198,10 +227,19 @@ export default function QuestionStepper({
                 qId={current.id || `q-${currentIndex}`}
                 value={answers[current.id || `q-${currentIndex}`]}
                 onChange={(value) => handleAnswerChange(current.id || `q-${currentIndex}`, value)}
+                labelledBy={`${current.id || currentIndex}-label`}
+                describedBy={
+                  combinedErrors[current.id || `q-${currentIndex}`]
+                    ? `${current.id || currentIndex}-error`
+                    : undefined
+                }
+                invalid={!!combinedErrors[current.id || `q-${currentIndex}`]}
               />
 
               {combinedErrors[current.id || `q-${currentIndex}`] && (
-                <ErrorInfo errorText={combinedErrors[current.id || `q-${currentIndex}`]} />
+                <div id={`${current.id || currentIndex}-error`}>
+                  <ErrorInfo errorText={combinedErrors[current.id || `q-${currentIndex}`]} />
+                </div>
               )}
 
               <div className="flex justify-between pt-2">
