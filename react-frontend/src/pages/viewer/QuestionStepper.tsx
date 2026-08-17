@@ -82,9 +82,12 @@ export default function QuestionStepper({
     setLocalErrors({});
 
     const next = getNextQuestion(orderedQuestions, answers, current.order);
-    if (next) {
-      setPath((prev) => [...prev.slice(0, currentIndex + 1), next]);
-    }
+
+    setPath((prev) => {
+      const truncated = prev.slice(0, currentIndex + 1);
+      return next ? [...truncated, next] : truncated;
+    });
+
     setCurrentIndex((i) => i + 1);
   };
 
