@@ -2,6 +2,9 @@ import { ref, shallowRef } from "vue";
 import type { QuestionAnalyticsDto } from "@surveycraft/shared-types";
 import { apiGet, ApiError } from "../api/client";
 
+export const getQuestionErrorMessage = (e: unknown): string =>
+  e instanceof ApiError ? "Не вдалося завантажити деталі питання" : "Помилка мережі";
+
 export function useQuestionAnalytics(apiBaseUrl: string, formId: string) {
   const data = shallowRef<QuestionAnalyticsDto | null>(null);
   const isLoading = ref(false);
@@ -17,8 +20,7 @@ export function useQuestionAnalytics(apiBaseUrl: string, formId: string) {
         `/forms/${formId}/questions/${questionId}/analytics`,
       );
     } catch (e) {
-      error.value =
-        e instanceof ApiError ? "Не вдалося завантажити деталі питання" : "Помилка мережі";
+      error.value = getQuestionErrorMessage(e);
     } finally {
       isLoading.value = false;
     }

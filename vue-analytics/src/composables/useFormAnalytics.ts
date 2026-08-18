@@ -2,6 +2,14 @@ import { ref, shallowRef } from "vue";
 import type { FormAnalyticsDto } from "@surveycraft/shared-types";
 import { apiGet, ApiError } from "../api/client";
 
+export const getAnalyticsErrorMessage = (e: unknown): string => {
+  if (e instanceof ApiError) {
+    if (e.status === 403) return "Немає доступу до аналітики цієї форми";
+    if (e.status === 404) return "Форму не знайдено";
+  }
+  return "Не вдалося завантажити аналітику";
+};
+
 export function useFormAnalytics(apiBaseUrl: string, formId: string) {
   const data = shallowRef<FormAnalyticsDto | null>(null);
   const isLoading = ref(true);
@@ -13,14 +21,7 @@ export function useFormAnalytics(apiBaseUrl: string, formId: string) {
     try {
       data.value = await apiGet<FormAnalyticsDto>(apiBaseUrl, `/forms/${formId}/analytics`);
     } catch (e) {
-      error.value =
-        e instanceof ApiError
-          ? e.status === 403
-            ? "Немає доступу до аналітики цієї форми"
-            : e.status === 404
-              ? "Форму не знайдено"
-              : "Не вдалося завантажити аналітику"
-          : "Не вдалося завантажити аналітику";
+      error.value = getAnalyticsErrorMessage(e);
     } finally {
       isLoading.value = false;
     }

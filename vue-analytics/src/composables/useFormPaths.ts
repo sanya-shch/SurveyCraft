@@ -2,6 +2,9 @@ import { ref, shallowRef } from "vue";
 import type { FormPathsDto } from "@surveycraft/shared-types";
 import { apiGet, ApiError } from "../api/client";
 
+export const getPathsErrorMessage = (e: unknown): string =>
+  e instanceof ApiError ? "Не вдалося завантажити шляхи проходження" : "Помилка мережі";
+
 export function useFormPaths(apiBaseUrl: string, formId: string) {
   const data = shallowRef<FormPathsDto | null>(null);
   const isLoading = ref(true);
@@ -13,8 +16,7 @@ export function useFormPaths(apiBaseUrl: string, formId: string) {
     try {
       data.value = await apiGet<FormPathsDto>(apiBaseUrl, `/forms/${formId}/analytics/paths`);
     } catch (e) {
-      error.value =
-        e instanceof ApiError ? "Не вдалося завантажити шляхи проходження" : "Помилка мережі";
+      error.value = getPathsErrorMessage(e);
     } finally {
       isLoading.value = false;
     }
