@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { AUTH_EXPIRED_EVENT } from "@surveycraft/shared-types";
 import { apiGet, ApiError } from "./client";
 
 describe("apiGet", () => {
@@ -56,21 +57,35 @@ describe("apiGet", () => {
     await expect(apiGet("http://api.test", "/x")).rejects.toMatchObject({ status: 403 });
   });
 
-  it("при 401 прибирає токен з localStorage (React-хост відповідає за релогін)", async () => {
+  it("при 401 прибирає токен з localStorage і диспатчить AUTH_EXPIRED_EVENT (React-хост відповідає за сам релогін)", async () => {
     localStorage.setItem("token", "expired-token");
     const fetchMock = vi.fn().mockResolvedValue({ ok: false, status: 401, json: async () => ({}) });
     globalThis.fetch = fetchMock as unknown as typeof fetch;
 
+    const eventListener = vi.fn();
+    window.addEventListener(AUTH_EXPIRED_EVENT, eventListener);
+
     await expect(apiGet("http://api.test", "/x")).rejects.toBeInstanceOf(ApiError);
+
     expect(localStorage.getItem("token")).toBeNull();
+    expect(eventListener).toHaveBeenCalledTimes(1);
+
+    window.removeEventListener(AUTH_EXPIRED_EVENT, eventListener);
   });
 
-  it("при 403/404 НЕ чіпає токен (він не протух, просто немає доступу)", async () => {
+  it("при 403/404 НЕ чіпає токен і НЕ диспатчить AUTH_EXPIRED_EVENT (немає доступу - не те саме, що протух токен)", async () => {
     localStorage.setItem("token", "valid-token");
     const fetchMock = vi.fn().mockResolvedValue({ ok: false, status: 404, json: async () => ({}) });
     globalThis.fetch = fetchMock as unknown as typeof fetch;
 
+    const eventListener = vi.fn();
+    window.addEventListener(AUTH_EXPIRED_EVENT, eventListener);
+
     await expect(apiGet("http://api.test", "/x")).rejects.toBeInstanceOf(ApiError);
+
     expect(localStorage.getItem("token")).toBe("valid-token");
+    expect(eventListener).not.toHaveBeenCalled();
+
+    window.removeEventListener(AUTH_EXPIRED_EVENT, eventListener);
   });
 });

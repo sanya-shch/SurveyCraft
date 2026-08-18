@@ -17,6 +17,11 @@ api.interceptors.request.use((config) => {
 });
 
 // перехоплюємо 401 помилки (якщо токен протух)
+// Для запитів vue-analytics (Module Federation remote) той самий ефект
+// (clearAuth -> ProtectedRoute реагує на isAuthenticated) досягається не
+// напряму, а через AUTH_EXPIRED_EVENT - див. useAuthExpiredListener.ts.
+// React-запитам цей event не потрібен: clearAuth() тут одразу оновлює
+// Zustand, на який ProtectedRoute і так підписаний реактивно.
 api.interceptors.response.use(
   (response) => response,
   (error) => {
