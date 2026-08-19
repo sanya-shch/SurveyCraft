@@ -5,6 +5,7 @@ import { validateConditionGraph } from "@surveycraft/condition-engine";
 const INITIAL_STATE: FormState = {
   title: "Нове опитування",
   description: "",
+  responseMode: "ALL_AT_ONCE",
   questions: [],
 };
 

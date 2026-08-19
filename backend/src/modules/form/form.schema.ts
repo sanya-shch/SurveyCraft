@@ -98,5 +98,6 @@ export const questionSchema = z.discriminatedUnion("type", [
 export const updateFormSchema = z.object({
   title: z.string(),
   description: z.string().optional(),
+  responseMode: z.enum(["ALL_AT_ONCE", "STEP_BY_STEP"]).optional(),
   questions: z.array(questionSchema),
 });

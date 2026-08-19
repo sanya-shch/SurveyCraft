@@ -77,6 +77,7 @@ export default function FormBuilder() {
       setForm({
         title: serverForm.title,
         description: serverForm.description || "",
+        responseMode: serverForm.responseMode || "ALL_AT_ONCE",
         questions: serverForm.questions || [],
       });
       resetDirty();
@@ -100,6 +101,7 @@ export default function FormBuilder() {
       return formsApi.update(formId!, {
         title: form.title,
         description: form.description,
+        responseMode: form.responseMode,
         questions: normalizedQuestions,
       });
     },
@@ -232,6 +234,37 @@ export default function FormBuilder() {
                 className="w-full mt-3 text-sm text-slate-600 border-b border-transparent hover:border-slate-200 focus:border-indigo-500 focus:outline-none pb-1 transition-colors resize-none h-10"
                 placeholder="Додайте опис опитування..."
               />
+
+              <div className="mt-4 pt-4 border-t border-slate-100 flex items-center justify-between gap-4">
+                <div>
+                  <p className="text-xs font-semibold text-slate-600">Режим проходження</p>
+                  <p className="text-[11px] text-slate-400 mt-0.5">
+                    Як респондент відповідатиме на питання
+                  </p>
+                </div>
+                <div className="flex gap-1 bg-slate-50 p-0.5 rounded-lg border border-slate-200 shrink-0">
+                  {(
+                    [
+                      { value: "ALL_AT_ONCE", label: "Усі питання" },
+                      { value: "STEP_BY_STEP", label: "По одному" },
+                    ] as const
+                  ).map((opt) => (
+                    <button
+                      key={opt.value}
+                      type="button"
+                      onClick={() => updateFormMeta({ responseMode: opt.value })}
+                      aria-pressed={form.responseMode === opt.value}
+                      className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-colors cursor-pointer ${
+                        form.responseMode === opt.value
+                          ? "bg-indigo-600 text-white"
+                          : "text-slate-500 hover:text-slate-800"
+                      }`}
+                    >
+                      {opt.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
 
               {errors.title && <ErrorInfo errorText={errors.title} />}
             </div>

@@ -15,6 +15,11 @@ enum QuestionType {
   NUMBER
 }
 
+enum ResponseMode {
+  ALL_AT_ONCE
+  STEP_BY_STEP
+}
+
 model User {
   id        String      @id @default(uuid())
   email     String      @unique
@@ -40,6 +45,8 @@ model Form {
 
   isPublished Boolean     @default(false)
   shareId     String      @unique @default(uuid())
+
+  responseMode ResponseMode @default(ALL_AT_ONCE)
 }
 
 model Question {

@@ -1,6 +1,11 @@
-import type { ConditionGroup } from "@surveycraft/shared-types";
+import type { ConditionGroup, ResponseMode } from "@surveycraft/shared-types";
 
-export type { ConditionGroup, ConditionOperator, ConditionRule } from "@surveycraft/shared-types";
+export type {
+  ConditionGroup,
+  ConditionOperator,
+  ConditionRule,
+  ResponseMode,
+} from "@surveycraft/shared-types";
 
 export type QuestionType =
   | "TEXT"
@@ -44,5 +49,6 @@ export interface Question {
 export interface FormState {
   title: string;
   description: string;
+  responseMode: ResponseMode;
   questions: Question[];
 }

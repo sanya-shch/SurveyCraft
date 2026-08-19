@@ -100,6 +100,7 @@ export const getFormByShareId = async (shareId: string) => {
     id: form.id,
     title: form.title,
     description: form.description,
+    responseMode: form.responseMode,
     questions: form.questions,
   };
 };
@@ -145,6 +146,7 @@ export const updateForm = async (formId: string, userId: string, data: UpdateFor
       data: {
         title: data.title,
         description: data.description,
+        responseMode: data.responseMode,
         updatedAt: new Date(),
       },
     });
@@ -236,6 +238,7 @@ export const duplicateForm = async (formId: string, userId: string) => {
       data: {
         title: form.title + " (Copy)",
         description: form.description,
+        responseMode: form.responseMode,
         userId,
         isPublished: false,
       },

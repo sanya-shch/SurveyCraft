@@ -1,6 +1,6 @@
-import { z } from 'zod';
-import { createFormSchema, updateFormSchema } from './form.schema.js';
-import { Question } from '@prisma/client';
+import { z } from "zod";
+import { createFormSchema, updateFormSchema } from "./form.schema.js";
+import { Question, ResponseMode } from "@prisma/client";
 
 export type UpdateFormInput = z.infer<typeof updateFormSchema>;
 export type CreateFormInput = z.infer<typeof createFormSchema>;
@@ -14,12 +14,14 @@ export type FormDto = {
   isPublished: boolean;
   shareId: string;
   userId: string;
+  responseMode: ResponseMode;
 };
 
 export type PublicFormDto = {
   id: string;
   title: string;
   description: string | null;
+  responseMode: ResponseMode;
   questions: Question[];
 };
 

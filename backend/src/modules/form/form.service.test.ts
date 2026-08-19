@@ -164,6 +164,16 @@ describe("getFormByShareId", () => {
     expect(result).not.toHaveProperty("userId");
     expect(result).not.toHaveProperty("shareId");
   });
+
+  it("передає responseMode у публічний DTO - viewer має знати, чи показувати покроковий режим", async () => {
+    (prisma.form.findUnique as any).mockResolvedValue(
+      mockForm({ isPublished: true, questions: [], responseMode: "STEP_BY_STEP" }),
+    );
+
+    const result = await getFormByShareId("share-1");
+
+    expect(result.responseMode).toBe("STEP_BY_STEP");
+  });
 });
 
 describe("publishForm", () => {
@@ -277,6 +287,29 @@ describe("duplicateForm", () => {
     expect(result).toEqual({ id: "form-2" });
   });
 
+  it("копіює responseMode оригіналу (не використовує Prisma-дефолт)", async () => {
+    (prisma.form.findUnique as any).mockResolvedValue(
+      mockForm({
+        title: "Оригінал",
+        description: null,
+        responseMode: "STEP_BY_STEP",
+        questions: [],
+      }),
+    );
+
+    const txForm = { create: vi.fn().mockResolvedValue({ id: "form-2" }) };
+    const txQuestion = { createMany: vi.fn().mockResolvedValue({ count: 0 }) };
+    (prisma.$transaction as any).mockImplementation((cb: any) =>
+      cb({ form: txForm, question: txQuestion }),
+    );
+
+    await duplicateForm(FORM_ID, OTHER_USER_ID);
+
+    expect(txForm.create).toHaveBeenCalledWith(
+      expect.objectContaining({ data: expect.objectContaining({ responseMode: "STEP_BY_STEP" }) }),
+    );
+  });
+
   it("підставляє порожній масив, якщо options оригінального питання не є масивом", async () => {
     (prisma.form.findUnique as any).mockResolvedValue(
       mockForm({
@@ -386,6 +419,32 @@ describe("updateForm", () => {
     });
   });
 
+  it("передає responseMode у prisma.form.update, коли він переданий", async () => {
+    (prisma.form.findUnique as any).mockResolvedValue(mockForm({ questions: [] }));
+    const { txForm } = setupTransactionMocks();
+
+    await updateForm(FORM_ID, OWNER_ID, {
+      title: "Форма",
+      responseMode: "STEP_BY_STEP",
+      questions: [],
+    } as any);
+
+    expect(txForm.update).toHaveBeenCalledWith(
+      expect.objectContaining({ data: expect.objectContaining({ responseMode: "STEP_BY_STEP" }) }),
+    );
+  });
+
+  it("не чіпає responseMode у БД, якщо його не передали (Prisma: undefined = не змінювати)", async () => {
+    (prisma.form.findUnique as any).mockResolvedValue(mockForm({ questions: [] }));
+    const { txForm } = setupTransactionMocks();
+
+    await updateForm(FORM_ID, OWNER_ID, { title: "Форма", questions: [] } as any);
+
+    expect(txForm.update).toHaveBeenCalledWith(
+      expect.objectContaining({ data: expect.objectContaining({ responseMode: undefined }) }),
+    );
+  });
+
   it("кидає 400 і не відкриває транзакцію, якщо condition утворює цикл", async () => {
     (prisma.form.findUnique as any).mockResolvedValue(mockForm({ questions: [] }));
 
@@ -398,14 +457,20 @@ describe("updateForm", () => {
             text: "Q1",
             type: "TEXT",
             order: 0,
-            condition: { logic: "AND", rules: [{ questionId: "q2", operator: "equals", value: "y" }] },
+            condition: {
+              logic: "AND",
+              rules: [{ questionId: "q2", operator: "equals", value: "y" }],
+            },
           },
           {
             id: "q2",
             text: "Q2",
             type: "TEXT",
             order: 0,
-            condition: { logic: "AND", rules: [{ questionId: "q1", operator: "equals", value: "y" }] },
+            condition: {
+              logic: "AND",
+              rules: [{ questionId: "q1", operator: "equals", value: "y" }],
+            },
           },
         ],
       } as any),
@@ -426,7 +491,10 @@ describe("updateForm", () => {
           text: "Q2 (нове)",
           type: "TEXT",
           order: 1,
-          condition: { logic: "AND", rules: [{ questionId: "q1", operator: "equals", value: "y" }] },
+          condition: {
+            logic: "AND",
+            rules: [{ questionId: "q1", operator: "equals", value: "y" }],
+          },
         },
       ],
     } as any);
@@ -438,7 +506,10 @@ describe("updateForm", () => {
         expect.objectContaining({ id: "q1", text: "Q1" }),
         expect.objectContaining({
           text: "Q2 (нове)",
-          condition: { logic: "AND", rules: [{ questionId: "q1", operator: "equals", value: "y" }] },
+          condition: {
+            logic: "AND",
+            rules: [{ questionId: "q1", operator: "equals", value: "y" }],
+          },
         }),
       ],
     });

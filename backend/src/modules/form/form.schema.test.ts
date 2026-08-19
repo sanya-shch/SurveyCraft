@@ -148,4 +148,29 @@ describe("updateFormSchema", () => {
 
     expect(result.success).toBe(true);
   });
+
+  it("responseMode необов'язковий - без нього форма все ще валідна", () => {
+    const result = updateFormSchema.safeParse({ title: "Форма", questions: [] });
+    expect(result.success).toBe(true);
+  });
+
+  it("приймає обидва значення responseMode", () => {
+    expect(
+      updateFormSchema.safeParse({ title: "Форма", responseMode: "ALL_AT_ONCE", questions: [] })
+        .success,
+    ).toBe(true);
+    expect(
+      updateFormSchema.safeParse({ title: "Форма", responseMode: "STEP_BY_STEP", questions: [] })
+        .success,
+    ).toBe(true);
+  });
+
+  it("відхиляє невідоме значення responseMode", () => {
+    const result = updateFormSchema.safeParse({
+      title: "Форма",
+      responseMode: "RANDOM_MODE",
+      questions: [],
+    });
+    expect(result.success).toBe(false);
+  });
 });

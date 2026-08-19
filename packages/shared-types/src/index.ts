@@ -1,5 +1,7 @@
 export const AUTH_EXPIRED_EVENT = "surveycraft:auth-expired";
 
+export type ResponseMode = "ALL_AT_ONCE" | "STEP_BY_STEP";
+
 export type ConditionOperator = "equals" | "notEquals" | "contains" | "in" | "gt" | "lt";
 
 export type ConditionValue = string | number | boolean | string[];
