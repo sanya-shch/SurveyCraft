@@ -10,6 +10,7 @@ import {
   validateAll,
   buildCleanedAnswers,
 } from "./questionValidation";
+import { useAttemptAutosave } from "./hooks/useAttemptAutosave";
 
 interface FormViewerProps {
   formTitle: string;
@@ -18,6 +19,8 @@ interface FormViewerProps {
   onSubmit: (data: FormAnswers) => void;
   serverErrors?: Record<string, string>;
   onClearServerError?: (fieldId: string) => void;
+  shareId?: string;
+  sessionKey?: string;
 }
 
 export default function FormViewer({
@@ -27,6 +30,8 @@ export default function FormViewer({
   onSubmit,
   serverErrors = {},
   onClearServerError,
+  shareId,
+  sessionKey = "",
 }: FormViewerProps) {
   const [answers, setAnswers] = useState<FormAnswers>(() => {
     const initialAnswers: FormAnswers = {};
@@ -36,6 +41,8 @@ export default function FormViewer({
     });
     return initialAnswers;
   });
+
+  useAttemptAutosave(shareId, sessionKey, answers);
 
   const [isSubmitAttempted, setIsSubmitAttempted] = useState(false);
   const [localErrors, setLocalErrors] = useState<Record<string, string>>({});

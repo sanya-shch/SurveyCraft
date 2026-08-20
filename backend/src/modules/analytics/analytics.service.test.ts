@@ -8,6 +8,8 @@ const {
   getResponseById,
   buildFormPaths,
   getFormPaths,
+  buildFormFunnel,
+  getFormFunnel,
 } = await import("./analytics.service.js");
 
 vi.mock("../../prisma/prisma.js", () => ({
@@ -17,6 +19,9 @@ vi.mock("../../prisma/prisma.js", () => ({
       findMany: vi.fn(),
       count: vi.fn(),
       findUnique: vi.fn(),
+    },
+    responseAttempt: {
+      findMany: vi.fn(),
     },
   },
 }));
@@ -492,5 +497,93 @@ describe("getFormPaths", () => {
     const result = await getFormPaths(FORM_ID, OWNER_ID);
 
     expect(result.nodes.map((n) => n.questionId)).toEqual(["q-a", "q-b"]);
+  });
+});
+
+describe("buildFormFunnel", () => {
+  const orderedQuestions = [
+    { id: "q1", text: "Питання 1", order: 0 },
+    { id: "q2", text: "Питання 2", order: 1 },
+    { id: "q3", text: "Питання 3", order: 2 },
+  ];
+
+  it("рахує reachedCount на основі visibleQuestionIds, а не answers - незавершені attempts теж рахуються", () => {
+    const attempts = [
+      // завершив усе
+      { visibleQuestionIds: ["q1", "q2", "q3"], completedAt: new Date() },
+      // покинув після q1 (autosave зафіксував лише q1 як видиме)
+      { visibleQuestionIds: ["q1"], completedAt: null },
+      // покинув після q2
+      { visibleQuestionIds: ["q1", "q2"], completedAt: null },
+    ];
+
+    const result = buildFormFunnel(orderedQuestions, attempts);
+
+    expect(result.totalAttempts).toBe(3);
+    expect(result.totalCompletions).toBe(1);
+    expect(result.nodes).toEqual([
+      { questionId: "q1", text: "Питання 1", order: 0, reachedCount: 3 }, // усі троє дійшли
+      { questionId: "q2", text: "Питання 2", order: 1, reachedCount: 2 }, // двоє
+      { questionId: "q3", text: "Питання 3", order: 2, reachedCount: 1 }, // лише завершений
+    ]);
+  });
+
+  it("completionRate = totalCompletions / totalAttempts", () => {
+    const attempts = [
+      { visibleQuestionIds: ["q1"], completedAt: new Date() },
+      { visibleQuestionIds: ["q1"], completedAt: new Date() },
+      { visibleQuestionIds: ["q1"], completedAt: null },
+      { visibleQuestionIds: ["q1"], completedAt: null },
+    ];
+
+    const result = buildFormFunnel(orderedQuestions, attempts);
+
+    expect(result.completionRate).toBe(0.5);
+  });
+
+  it("порожній список attempts - нулі всюди, completionRate 0 (не NaN), без падіння", () => {
+    const result = buildFormFunnel(orderedQuestions, []);
+
+    expect(result.totalAttempts).toBe(0);
+    expect(result.totalCompletions).toBe(0);
+    expect(result.completionRate).toBe(0);
+    expect(result.nodes.every((n) => n.reachedCount === 0)).toBe(true);
+  });
+
+  it("некоректний (не-масив) visibleQuestionIds трактується як порожній, без падіння", () => {
+    const attempts = [{ visibleQuestionIds: null, completedAt: null }];
+
+    const result = buildFormFunnel(orderedQuestions, attempts);
+
+    expect(result.totalAttempts).toBe(1);
+    expect(result.nodes.every((n) => n.reachedCount === 0)).toBe(true);
+  });
+});
+
+describe("getFormFunnel", () => {
+  it("кидає 404/403 за ownership-перевіркою, як і інші analytics-ендпоінти", async () => {
+    (prisma.form.findUnique as any).mockResolvedValue(null);
+    await expect(getFormFunnel(FORM_ID, OWNER_ID)).rejects.toMatchObject({ statusCode: 404 });
+
+    (prisma.form.findUnique as any).mockResolvedValue(mockForm());
+    await expect(getFormFunnel(FORM_ID, OTHER_USER_ID)).rejects.toMatchObject({ statusCode: 403 });
+  });
+
+  it("читає з responseAttempt, НЕ з response - це і є вся суть 'справжнього' funnel", async () => {
+    (prisma.form.findUnique as any).mockResolvedValue(
+      mockForm({ questions: [{ id: "q1", order: 0, text: "Q1" }] }),
+    );
+    (prisma.responseAttempt.findMany as any).mockResolvedValue([
+      { visibleQuestionIds: ["q1"], completedAt: null },
+    ]);
+
+    const result = await getFormFunnel(FORM_ID, OWNER_ID);
+
+    expect(prisma.responseAttempt.findMany).toHaveBeenCalledWith({
+      where: { formId: FORM_ID },
+      select: { visibleQuestionIds: true, completedAt: true },
+    });
+    expect(result.totalAttempts).toBe(1);
+    expect(result.totalCompletions).toBe(0);
   });
 });

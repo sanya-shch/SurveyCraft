@@ -39,6 +39,7 @@ model Form {
   questions   Question[]
   responses   Response[]
   exportJobs  ExportJob[]
+  attempts    ResponseAttempt[]
 
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @default(now())
@@ -81,6 +82,49 @@ model Response {
   visibleQuestionIds Json?
 
   createdAt DateTime @default(now())
+}
+
+/**
+ * "Чернетка" проходження форми - autosave-знімок прогресу респондента ДО
+ * фінального сабміту. На відміну від Response (створюється лише при
+ * успішному повному сабміті), цей запис існує і для покинутих проходжень -
+ * саме це і дає змогу порахувати СПРАВЖНІЙ funnel (скільки респондентів
+ * реально дійшли до кожного питання, включно з тими, хто так і не
+ * завершив), а не лише "популярність гілок серед завершених" (те, що вже
+ * робить /analytics/paths на основі Response).
+ *
+ * sessionKey - клієнтський UUID, згенерований у браузері респондента при
+ * першому дотику до форми (react-frontend, sessionStorage, переживає
+ * оновлення сторінки в межах тієї самої вкладки, але не нову вкладку -
+ * свідомо: нова вкладка = новий "заход" для funnel-цілей). Той самий ключ
+ * передається у фінальний сабміт (submitResponse), щоб позначити attempt
+ * як completedAt - server-side upsert по (formId, sessionKey), не
+ * плодить рядки на кожен keystroke.
+ */
+model ResponseAttempt {
+  id     String @id @default(uuid())
+  form   Form   @relation(fields: [formId], references: [id], onDelete: Cascade)
+  formId String
+
+  sessionKey String
+
+  answers Json
+  // Той самий сенс і те саме обчислення, що й Response.visibleQuestionIds
+  // (resolveVisibleQuestionIds з @surveycraft/condition-engine) - на
+  // основі цього поля funnel рахує "найдальше досягнуте питання" навіть
+  // для покинутих проходжень, з урахуванням conditional branching.
+  visibleQuestionIds Json?
+
+  startedAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  // null = ще не завершено (або досі заповнює, або покинув - funnel не
+  // намагається розрізнити ці два стани за жодним часовим порогом, це
+  // було б довільним припущенням; звітність показує сирі цифри й дає
+  // читачеві самому інтерпретувати).
+  completedAt DateTime?
+
+  @@unique([formId, sessionKey])
+  @@index([formId])
 }
 
 enum ExportFormat {

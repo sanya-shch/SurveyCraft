@@ -169,3 +169,33 @@ export type ResponseDetailsDto = {
   createdAt: Date;
   answers: EnrichedAnswer[];
 };
+
+/**
+ * Справжня funnel-аналітика (на відміну від FormPathsDto/QuestionPathEdge,
+ * які показують популярність гілок лише серед ЗАВЕРШЕНИХ відповідей) -
+ * рахується з ResponseAttempt (autosave-чернетки), тому враховує і
+ * покинуті проходження, не лише успішні сабміти.
+ *
+ * reachedCount на кожному питанні = скільки attempts (завершених чи ні)
+ * мали це питання у своєму visibleQuestionIds хоч раз - тобто дійсно його
+ * побачили, з урахуванням conditional branching.
+ *
+ * Навмисно НЕ розрізняємо "покинув" від "ще активно заповнює" за жодним
+ * часовим порогом - completedAt: null означає лише "ще не завершено",
+ * без додаткової інтерпретації. totalAttempts - totalCompletions і є
+ * "не завершили" в широкому сенсі, саме те число, яке просив показати
+ * запит на 'справжню funnel-аналітику'.
+ */
+export type QuestionFunnelNode = {
+  questionId: string;
+  text: string;
+  order: number;
+  reachedCount: number;
+};
+
+export type FormFunnelDto = {
+  totalAttempts: number;
+  totalCompletions: number;
+  completionRate: number;
+  nodes: QuestionFunnelNode[];
+};

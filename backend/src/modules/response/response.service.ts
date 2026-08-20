@@ -5,7 +5,7 @@ import { Answers } from "./response.types.js";
 import { resolveVisibleQuestionIds, type QuestionLike } from "@surveycraft/condition-engine";
 import { toJson } from "../../shared/utils/helpers.js";
 
-export const submitResponse = async (shareId: string, answers: Answers) => {
+export const submitResponse = async (shareId: string, answers: Answers, sessionKey?: string) => {
   const form = await prisma.form.findUnique({
     where: { shareId },
     include: {
@@ -45,11 +45,25 @@ export const submitResponse = async (shareId: string, answers: Answers) => {
     ),
   ) as Answers;
 
-  return prisma.response.create({
+  const response = await prisma.response.create({
     data: {
       formId: form.id,
       answers: toJson(cleanedAnswers),
       visibleQuestionIds: toJson(Array.from(visibleQuestionIds)),
     },
   });
+
+  if (sessionKey) {
+    // updateMany, не update: якщо autosave жодного разу не спрацював
+    // (наприклад, респондент заповнив і надіслав форму блискавично, до
+    // першого debounced autosave), рядка ResponseAttempt може не бути
+    // взагалі - це не помилка, просто funnel не матиме "проміжного" сліду
+    // цього конкретного проходження, лишень фінальний Response.
+    await prisma.responseAttempt.updateMany({
+      where: { formId: form.id, sessionKey },
+      data: { completedAt: new Date() },
+    });
+  }
+
+  return response;
 };

@@ -3,9 +3,11 @@
 import { ref } from "vue";
 import { useFormAnalytics } from "./composables/useFormAnalytics";
 import { useFormPaths } from "./composables/useFormPaths";
+import { useFormFunnel } from "./composables/useFormFunnel";
 import { useQuestionAnalytics } from "./composables/useQuestionAnalytics";
 import QuestionOverviewCard from "./components/QuestionOverviewCard.vue";
 import PathsDiagram from "./components/PathsDiagram.vue";
+import FunnelChart from "./components/FunnelChart.vue";
 import QuestionDetailPanel from "./components/QuestionDetailPanel.vue";
 
 const props = defineProps<{
@@ -20,6 +22,7 @@ const { data: analytics, isLoading: analyticsLoading, error: analyticsError } = 
   props.formId,
 );
 const { data: paths, isLoading: pathsLoading, error: pathsError } = useFormPaths(apiBaseUrl, props.formId);
+const { data: funnel, isLoading: funnelLoading, error: funnelError } = useFormFunnel(apiBaseUrl, props.formId);
 const { data: detail, isLoading: detailLoading, error: detailError, load: loadDetail } =
   useQuestionAnalytics(apiBaseUrl, props.formId);
 
@@ -44,12 +47,20 @@ const closeDetail = () => {
       <div v-if="analytics" class="total-badge">{{ analytics.totalResponses }} відповідей</div>
     </header>
 
+    <section class="funnel-section">
+      <h2 class="section-title">Funnel проходження</h2>
+
+      <div v-if="funnelLoading" class="state-msg">Завантаження funnel...</div>
+      <div v-else-if="funnelError" class="state-msg state-msg--error">{{ funnelError }}</div>
+      <FunnelChart v-else-if="funnel" :funnel="funnel" />
+    </section>
+
     <section v-if="analyticsLoading" class="state-msg">Завантаження аналітики...</section>
     <section v-else-if="analyticsError" class="state-msg state-msg--error">{{ analyticsError }}</section>
 
     <template v-else-if="analytics">
       <section v-if="analytics.totalResponses === 0" class="empty-state">
-        Ще немає жодної відповіді на цю форму.
+        Ще немає жодної завершеної відповіді на цю форму.
       </section>
 
       <template v-else>
@@ -66,8 +77,8 @@ const closeDetail = () => {
         <section class="paths-section">
           <h2 class="section-title">Шляхи проходження</h2>
           <p class="section-hint">
-            Популярність гілок серед завершених відповідей. Це не funnel-аналітика з відсотком
-            незавершених — незакінчені проходження зараз ніде не зберігаються.
+            Популярність гілок серед завершених відповідей. Для funnel з покинутими
+            проходженнями дивіться секцію "Funnel проходження" вище.
           </p>
 
           <div v-if="pathsLoading" class="state-msg">Завантаження шляхів...</div>
@@ -158,6 +169,14 @@ const closeDetail = () => {
 .paths-section {
   max-width: 960px;
   margin: 40px auto 0;
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 20px;
+  padding: 28px;
+}
+.funnel-section {
+  max-width: 960px;
+  margin: 0 auto 32px;
   background: white;
   border: 1px solid #e2e8f0;
   border-radius: 20px;

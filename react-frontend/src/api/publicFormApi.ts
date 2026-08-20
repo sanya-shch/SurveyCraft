@@ -16,7 +16,19 @@ export const fetchPublicForm = async (shareId: string): Promise<PublicFormFields
   return response.data;
 };
 
-export const submitFormResponses = async (shareId: string, answers: FormAnswers): Promise<void> => {
-  const response = await publicApi.post(`/forms/${shareId}/responses`, { answers });
+export const submitFormResponses = async (
+  shareId: string,
+  answers: FormAnswers,
+  sessionKey?: string,
+): Promise<void> => {
+  const response = await publicApi.post(`/forms/${shareId}/responses`, { answers, sessionKey });
   return response.data;
+};
+
+export const saveFormAttempt = async (
+  shareId: string,
+  sessionKey: string,
+  answers: FormAnswers,
+): Promise<void> => {
+  await publicApi.put(`/forms/${shareId}/attempt`, { sessionKey, answers });
 };

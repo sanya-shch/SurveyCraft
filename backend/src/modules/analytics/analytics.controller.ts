@@ -5,8 +5,10 @@ import {
   getQuestionAnalytics,
   getResponseById,
   getResponses,
+  getFormFunnel,
 } from "./analytics.service.js";
 import {
+  FormFunnelDto,
   FormPathsDto,
   GetResponsesQuery,
   QuestionAnalyticsDto,
@@ -89,6 +91,17 @@ export const getResponseByIdHandler = asyncHandler(
     const userId = (res.locals as AuthLocals).userId;
 
     const data = await getResponseById(formId, responseId, userId);
+
+    res.json(data);
+  },
+);
+
+export const getFormFunnelHandler = asyncHandler(
+  async (req: Request<{ formId: string }>, res: Response<FormFunnelDto>) => {
+    const { formId } = req.params;
+    const userId = (res.locals as AuthLocals).userId;
+
+    const data = await getFormFunnel(formId, userId);
 
     res.json(data);
   },

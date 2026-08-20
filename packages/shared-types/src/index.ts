@@ -90,9 +90,9 @@ export interface QuestionPathNode {
 /**
  * Перехід між двома послідовними ВИДИМИМИ питаннями серед завершених
  * відповідей. fromQuestionId: null - перехід зі старту форми до першого
- * показаного питання. Це НЕ funnel/drop-off аналітика (див. коментар у
- * backend/src/modules/analytics/analytics.types.ts) - Response персистується
- * лише при повному сабміті.
+ * показаного питання. Це НЕ funnel/drop-off аналітика - для того є
+ * FormFunnelDto (нижче), який рахується з ResponseAttempt (autosave-
+ * чернетки) і бачить покинуті проходження, не лише завершені Response.
  */
 export interface QuestionPathEdge {
   fromQuestionId: string | null;
@@ -104,6 +104,20 @@ export interface FormPathsDto {
   totalResponses: number;
   nodes: QuestionPathNode[];
   edges: QuestionPathEdge[];
+}
+
+export interface QuestionFunnelNode {
+  questionId: string;
+  text: string;
+  order: number;
+  reachedCount: number;
+}
+
+export interface FormFunnelDto {
+  totalAttempts: number;
+  totalCompletions: number;
+  completionRate: number;
+  nodes: QuestionFunnelNode[];
 }
 
 export interface ResponseSummary {

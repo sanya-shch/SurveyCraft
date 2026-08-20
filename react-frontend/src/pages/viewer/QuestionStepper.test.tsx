@@ -124,7 +124,7 @@ describe("QuestionStepper - покрокова навігація з умовн�
     await user.click(screen.getByRole("button", { name: "Далі →" }));
 
     // Тепер має бути review-екран одразу, без "Умовне питання" в path
-    expect(screen.getByText("Готово перевірити відповіді?")).toBeInTheDocument();
+    expect(screen.getByText("Готово, перевірте відповіді")).toBeInTheDocument();
     expect(screen.queryByText("Умовне питання")).not.toBeInTheDocument();
   });
 
@@ -137,7 +137,7 @@ describe("QuestionStepper - покрокова навігація з умовн�
     await user.type(screen.getByLabelText(/Ім'я/), "Олександр");
     await user.click(screen.getByRole("button", { name: "Далі →" }));
 
-    expect(screen.getByText("Готово перевірити відповіді?")).toBeInTheDocument();
+    expect(screen.getByText("Готово, перевірте відповіді")).toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: "Надіслати відповіді" }));
 

@@ -4,8 +4,10 @@ import { Answers } from "../response/response.types.js";
 import {
   EnrichedAnswer,
   FormAnalyticsDto,
+  FormFunnelDto,
   FormPathsDto,
   QuestionAnalyticsDto,
+  QuestionFunnelNode,
   QuestionOverview,
   QuestionPathEdge,
   QuestionPathNode,
@@ -231,6 +233,67 @@ export const getFormPaths = async (formId: string, userId: string): Promise<Form
   const orderedQuestions = [...form.questions].sort((a, b) => a.order - b.order);
 
   return buildFormPaths(orderedQuestions, responses);
+};
+
+/**
+ * Чиста функція агрегації funnel - винесена окремо від getFormFunnel, щоб
+ * тестувати без моку Prisma (той самий підхід, що й buildFormPaths).
+ * attempts - рядки ResponseAttempt (і завершені, і ні); reachedCount на
+ * питання рахується з visibleQuestionIds КОЖНОГО attempt, не з answers -
+ * респондент міг побачити питання й ще не встигнути на нього відповісти,
+ * і це все одно "досяг" для funnel-цілей.
+ */
+export const buildFormFunnel = (
+  orderedQuestions: { id: string; text: string; order: number }[],
+  attempts: { visibleQuestionIds: unknown; completedAt: Date | null }[],
+): FormFunnelDto => {
+  const reachedCount: Record<string, number> = {};
+
+  for (const attempt of attempts) {
+    const visibleIds = Array.isArray(attempt.visibleQuestionIds)
+      ? (attempt.visibleQuestionIds as string[])
+      : [];
+
+    for (const id of visibleIds) {
+      reachedCount[id] = (reachedCount[id] || 0) + 1;
+    }
+  }
+
+  const totalAttempts = attempts.length;
+  const totalCompletions = attempts.filter((a) => a.completedAt !== null).length;
+
+  const nodes: QuestionFunnelNode[] = orderedQuestions.map((q) => ({
+    questionId: q.id,
+    text: q.text,
+    order: q.order,
+    reachedCount: reachedCount[q.id] || 0,
+  }));
+
+  return {
+    totalAttempts,
+    totalCompletions,
+    completionRate: totalAttempts > 0 ? totalCompletions / totalAttempts : 0,
+    nodes,
+  };
+};
+
+export const getFormFunnel = async (formId: string, userId: string): Promise<FormFunnelDto> => {
+  const form = await prisma.form.findUnique({
+    where: { id: formId },
+    include: { questions: true },
+  });
+
+  if (!form) throw new AppError("Form not found", 404);
+  if (form.userId !== userId) throw new AppError("Forbidden", 403);
+
+  const attempts = await prisma.responseAttempt.findMany({
+    where: { formId },
+    select: { visibleQuestionIds: true, completedAt: true },
+  });
+
+  const orderedQuestions = [...form.questions].sort((a, b) => a.order - b.order);
+
+  return buildFormFunnel(orderedQuestions, attempts);
 };
 
 export const getQuestionAnalytics = async (

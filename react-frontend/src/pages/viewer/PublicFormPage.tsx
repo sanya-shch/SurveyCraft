@@ -3,7 +3,8 @@ import { type FormAnswers } from "../../types/formViewer";
 import { usePublicFormQuery, useSubmitResponsesMutation } from "./hooks/usePublicForm";
 import FormViewer from "./FormViewer";
 import QuestionStepper from "./QuestionStepper";
-import { useState } from "react";
+import { useMemo, useState } from "react";
+import { getOrCreateSessionKey } from "./sessionKey";
 
 interface ExpectedError {
   response?: {
@@ -20,6 +21,12 @@ export default function PublicFormPage() {
   const { data: formData, isLoading, error } = usePublicFormQuery(shareId);
 
   const [formServerErrors, setFormServerErrors] = useState<Record<string, string>>({});
+
+  // Один sessionKey на shareId, стабільний у межах вкладки (sessionStorage) -
+  // об'єднує autosave-чернетку (useAttemptAutosave у FormViewer/
+  // QuestionStepper) з фінальним сабмітом, щоб бекенд позначив ту саму
+  // спробу completedAt замість того, щоб вона лишилась "покинутою".
+  const sessionKey = useMemo(() => (shareId ? getOrCreateSessionKey(shareId) : ""), [shareId]);
 
   const {
     mutate: submitResponses,
@@ -41,7 +48,7 @@ export default function PublicFormPage() {
 
     if (shareId)
       submitResponses(
-        { shareId, answers: cleanedAnswers },
+        { shareId, answers: cleanedAnswers, sessionKey },
         {
           onError: (error: unknown) => {
             const err = error as ExpectedError;
@@ -149,6 +156,8 @@ export default function PublicFormPage() {
           serverErrors={formServerErrors}
           onClearServerError={handleClearServerError}
           onSubmit={handleFormSubmit}
+          shareId={shareId}
+          sessionKey={sessionKey}
         />
       ) : (
         <FormViewer
@@ -158,6 +167,8 @@ export default function PublicFormPage() {
           serverErrors={formServerErrors}
           onClearServerError={handleClearServerError}
           onSubmit={handleFormSubmit}
+          shareId={shareId}
+          sessionKey={sessionKey}
         />
       )}
     </div>

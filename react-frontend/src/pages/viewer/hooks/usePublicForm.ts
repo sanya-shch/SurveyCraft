@@ -14,7 +14,14 @@ export function usePublicFormQuery(shareId?: string) {
 
 export function useSubmitResponsesMutation() {
   return useMutation({
-    mutationFn: ({ shareId, answers }: { shareId: string; answers: FormAnswers }) =>
-      submitFormResponses(shareId, answers),
+    mutationFn: ({
+      shareId,
+      answers,
+      sessionKey,
+    }: {
+      shareId: string;
+      answers: FormAnswers;
+      sessionKey?: string;
+    }) => submitFormResponses(shareId, answers, sessionKey),
   });
 }

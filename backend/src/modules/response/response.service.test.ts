@@ -4,6 +4,7 @@ vi.mock("../../prisma/prisma.js", () => ({
   prisma: {
     form: { findUnique: vi.fn() },
     response: { create: vi.fn() },
+    responseAttempt: { updateMany: vi.fn() },
   },
 }));
 
@@ -145,5 +146,26 @@ describe("submitResponse", () => {
       statusCode: 400,
     });
     expect(prisma.response.create).not.toHaveBeenCalled();
+  });
+
+  it("з sessionKey - позначає відповідний ResponseAttempt як завершений (completedAt)", async () => {
+    (prisma.form.findUnique as any).mockResolvedValue(publishedForm);
+    (prisma.response.create as any).mockResolvedValue({ id: "resp-1" });
+
+    await submitResponse(SHARE_ID, { "q-name": "Олександр" }, "session-abc");
+
+    expect(prisma.responseAttempt.updateMany).toHaveBeenCalledWith({
+      where: { formId: "form-1", sessionKey: "session-abc" },
+      data: { completedAt: expect.any(Date) },
+    });
+  });
+
+  it("без sessionKey - НЕ чіпає ResponseAttempt взагалі", async () => {
+    (prisma.form.findUnique as any).mockResolvedValue(publishedForm);
+    (prisma.response.create as any).mockResolvedValue({ id: "resp-1" });
+
+    await submitResponse(SHARE_ID, { "q-name": "Олександр" });
+
+    expect(prisma.responseAttempt.updateMany).not.toHaveBeenCalled();
   });
 });

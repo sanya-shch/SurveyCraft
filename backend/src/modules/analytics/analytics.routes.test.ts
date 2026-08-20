@@ -9,6 +9,7 @@ vi.mock("./analytics.service.js", () => ({
   getQuestionAnalytics: vi.fn(),
   getResponses: vi.fn(),
   getResponseById: vi.fn(),
+  getFormFunnel: vi.fn(),
 }));
 
 const service = await import("./analytics.service.js");
@@ -159,5 +160,31 @@ describe("GET /api/forms/:formId/responses/:responseId", () => {
 
     expect(res.status).toBe(200);
     expect(service.getResponseById).toHaveBeenCalledWith("form-1", "resp-1", "user-1");
+  });
+});
+
+describe("GET /api/forms/:formId/analytics/funnel", () => {
+  it("401 без токена", async () => {
+    const res = await request(app).get("/api/forms/form-1/analytics/funnel");
+    expect(res.status).toBe(401);
+  });
+
+  it("200 з totalAttempts/totalCompletions/nodes, не плутається з /paths", async () => {
+    (service.getFormFunnel as any).mockResolvedValue({
+      totalAttempts: 10,
+      totalCompletions: 4,
+      completionRate: 0.4,
+      nodes: [{ questionId: "q1", text: "Q1", order: 0, reachedCount: 10 }],
+    });
+
+    const res = await request(app)
+      .get("/api/forms/form-1/analytics/funnel")
+      .set("Authorization", AUTH);
+
+    expect(res.status).toBe(200);
+    expect(res.body.totalAttempts).toBe(10);
+    expect(res.body.completionRate).toBe(0.4);
+    expect(service.getFormFunnel).toHaveBeenCalledWith("form-1", "user-1");
+    expect(service.getFormPaths).not.toHaveBeenCalled();
   });
 });

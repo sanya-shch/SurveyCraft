@@ -10,6 +10,7 @@ import {
   buildCleanedAnswers,
 } from "./questionValidation";
 import { sortByOrder, getNextQuestion } from "./questionFlow";
+import { useAttemptAutosave } from "./hooks/useAttemptAutosave";
 
 interface QuestionStepperProps {
   formTitle: string;
@@ -18,6 +19,8 @@ interface QuestionStepperProps {
   onSubmit: (data: FormAnswers) => void;
   serverErrors?: Record<string, string>;
   onClearServerError?: (fieldId: string) => void;
+  shareId?: string;
+  sessionKey?: string;
 }
 
 export default function QuestionStepper({
@@ -27,6 +30,8 @@ export default function QuestionStepper({
   onSubmit,
   serverErrors = {},
   onClearServerError,
+  shareId,
+  sessionKey = "",
 }: QuestionStepperProps) {
   const orderedQuestions = useMemo(() => sortByOrder(questions), [questions]);
 
@@ -38,6 +43,8 @@ export default function QuestionStepper({
     });
     return initial;
   });
+
+  useAttemptAutosave(shareId, sessionKey, answers);
 
   const [path, setPath] = useState<Question[]>(() => {
     const first = getNextQuestion(orderedQuestions, {}, -Infinity);
