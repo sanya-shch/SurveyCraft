@@ -5,10 +5,15 @@ import { useFormAnalytics } from "./composables/useFormAnalytics";
 import { useFormPaths } from "./composables/useFormPaths";
 import { useFormFunnel } from "./composables/useFormFunnel";
 import { useQuestionAnalytics } from "./composables/useQuestionAnalytics";
+import { useResponsesList } from "./composables/useResponsesList";
+import { useResponseDetail } from "./composables/useResponseDetail";
 import QuestionOverviewCard from "./components/QuestionOverviewCard.vue";
 import PathsDiagram from "./components/PathsDiagram.vue";
 import FunnelChart from "./components/FunnelChart.vue";
 import QuestionDetailPanel from "./components/QuestionDetailPanel.vue";
+import ResponsesList from "./components/ResponsesList.vue";
+import ResponseDetailView from "./components/ResponseDetailView.vue";
+import ExportMenu from "./components/ExportMenu.vue";
 
 const props = defineProps<{
   formId: string;
@@ -35,6 +40,29 @@ const openDetail = (questionId: string) => {
 const closeDetail = () => {
   activeQuestionId.value = null;
 };
+
+const activeTab = ref<"overview" | "responses">("overview");
+
+const {
+  data: responsesList,
+  page: responsesPage,
+  isLoading: responsesListLoading,
+  error: responsesListError,
+} = useResponsesList(apiBaseUrl, props.formId);
+
+const {
+  data: responseDetail,
+  isLoading: responseDetailLoading,
+  error: responseDetailError,
+  load: loadResponseDetail,
+} = useResponseDetail(apiBaseUrl, props.formId);
+
+const selectedResponseId = ref<string | null>(null);
+
+const selectResponse = (responseId: string) => {
+  selectedResponseId.value = responseId;
+  loadResponseDetail(responseId);
+};
 </script>
 
 <template>
@@ -44,62 +72,112 @@ const closeDetail = () => {
         <h1 class="page-title">Аналітика форми</h1>
         <p class="page-subtitle">Vue 3 · завантажено через Module Federation</p>
       </div>
-      <div v-if="analytics" class="total-badge">{{ analytics.totalResponses }} відповідей</div>
+      <div class="header-right">
+        <div v-if="analytics" class="total-badge">{{ analytics.totalResponses }} відповідей</div>
+        <ExportMenu v-if="activeTab === 'responses'" :api-base-url="apiBaseUrl" :form-id="formId" />
+      </div>
     </header>
 
-    <section class="funnel-section">
-      <h2 class="section-title">Funnel проходження</h2>
+    <nav class="tabs">
+      <button
+        type="button"
+        class="tab-btn"
+        :class="{ 'tab-btn--active': activeTab === 'overview' }"
+        @click="activeTab = 'overview'"
+      >
+        Огляд
+      </button>
+      <button
+        type="button"
+        class="tab-btn"
+        :class="{ 'tab-btn--active': activeTab === 'responses' }"
+        @click="activeTab = 'responses'"
+      >
+        Сирі відповіді
+      </button>
+    </nav>
 
-      <div v-if="funnelLoading" class="state-msg">Завантаження funnel...</div>
-      <div v-else-if="funnelError" class="state-msg state-msg--error">{{ funnelError }}</div>
-      <FunnelChart v-else-if="funnel" :funnel="funnel" />
-    </section>
+    <template v-if="activeTab === 'overview'">
+      <section class="funnel-section">
+        <h2 class="section-title">Funnel проходження</h2>
 
-    <section v-if="analyticsLoading" class="state-msg">Завантаження аналітики...</section>
-    <section v-else-if="analyticsError" class="state-msg state-msg--error">{{ analyticsError }}</section>
-
-    <template v-else-if="analytics">
-      <section v-if="analytics.totalResponses === 0" class="empty-state">
-        Ще немає жодної завершеної відповіді на цю форму.
+        <div v-if="funnelLoading" class="state-msg">Завантаження funnel...</div>
+        <div v-else-if="funnelError" class="state-msg state-msg--error">{{ funnelError }}</div>
+        <FunnelChart v-else-if="funnel" :funnel="funnel" />
       </section>
 
-      <template v-else>
-        <section class="cards-grid">
-          <QuestionOverviewCard
-            v-for="q in analytics.questions"
-            :key="q.id"
-            :question="q"
-            :total-responses="analytics.totalResponses"
-            @open-detail="openDetail"
-          />
+      <section v-if="analyticsLoading" class="state-msg">Завантаження аналітики...</section>
+      <section v-else-if="analyticsError" class="state-msg state-msg--error">{{ analyticsError }}</section>
+
+      <template v-else-if="analytics">
+        <section v-if="analytics.totalResponses === 0" class="empty-state">
+          Ще немає жодної завершеної відповіді на цю форму.
         </section>
 
-        <section class="paths-section">
-          <h2 class="section-title">Шляхи проходження</h2>
-          <p class="section-hint">
-            Популярність гілок серед завершених відповідей. Для funnel з покинутими
-            проходженнями дивіться секцію "Funnel проходження" вище.
-          </p>
+        <template v-else>
+          <section class="cards-grid">
+            <QuestionOverviewCard
+              v-for="q in analytics.questions"
+              :key="q.id"
+              :question="q"
+              :total-responses="analytics.totalResponses"
+              @open-detail="openDetail"
+            />
+          </section>
 
-          <div v-if="pathsLoading" class="state-msg">Завантаження шляхів...</div>
-          <div v-else-if="pathsError" class="state-msg state-msg--error">{{ pathsError }}</div>
-          <PathsDiagram
-            v-else-if="paths"
-            :nodes="paths.nodes"
-            :edges="paths.edges"
-            :total-responses="paths.totalResponses"
-          />
-        </section>
+          <section class="paths-section">
+            <h2 class="section-title">Шляхи проходження</h2>
+            <p class="section-hint">
+              Популярність гілок серед завершених відповідей. Для funnel з покинутими
+              проходженнями дивіться секцію "Funnel проходження" вище.
+            </p>
+
+            <div v-if="pathsLoading" class="state-msg">Завантаження шляхів...</div>
+            <div v-else-if="pathsError" class="state-msg state-msg--error">{{ pathsError }}</div>
+            <PathsDiagram
+              v-else-if="paths"
+              :nodes="paths.nodes"
+              :edges="paths.edges"
+              :total-responses="paths.totalResponses"
+            />
+          </section>
+        </template>
       </template>
+
+      <QuestionDetailPanel
+        v-if="activeQuestionId"
+        :data="detail"
+        :is-loading="detailLoading"
+        :error="detailError"
+        @close="closeDetail"
+      />
     </template>
 
-    <QuestionDetailPanel
-      v-if="activeQuestionId"
-      :data="detail"
-      :is-loading="detailLoading"
-      :error="detailError"
-      @close="closeDetail"
-    />
+    <section v-else class="responses-tab">
+      <div class="responses-grid">
+        <ResponsesList
+          :data="responsesList"
+          :is-loading="responsesListLoading"
+          :error="responsesListError"
+          :page="responsesPage"
+          :selected-response-id="selectedResponseId"
+          @select="selectResponse"
+          @update:page="(p) => (responsesPage = p)"
+        />
+
+        <div class="responses-detail-col">
+          <ResponseDetailView
+            v-if="selectedResponseId"
+            :data="responseDetail"
+            :is-loading="responseDetailLoading"
+            :error="responseDetailError"
+          />
+          <div v-else class="placeholder">
+            Оберіть відповідь зі списку ліворуч для перегляду деталей
+          </div>
+        </div>
+      </div>
+    </section>
   </div>
 </template>
 
@@ -141,6 +219,69 @@ const closeDetail = () => {
   font-weight: 700;
   padding: 6px 14px;
   border-radius: 999px;
+}
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.tabs {
+  max-width: 960px;
+  margin: 0 auto 24px;
+  display: flex;
+  gap: 4px;
+  background: #f1f5f9;
+  padding: 4px;
+  border-radius: 12px;
+  width: fit-content;
+}
+.tab-btn {
+  border: none;
+  background: transparent;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #64748b;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.tab-btn:hover {
+  color: #334155;
+}
+.tab-btn--active {
+  background: white;
+  color: #4f46e5;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.06);
+}
+.responses-tab {
+  max-width: 960px;
+  margin: 0 auto;
+}
+.responses-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 24px;
+  align-items: start;
+}
+@media (min-width: 768px) {
+  .responses-grid {
+    grid-template-columns: 1fr 2fr;
+  }
+}
+.placeholder {
+  height: 192px;
+  border: 2px dashed #e2e8f0;
+  background: white;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #94a3b8;
+  font-weight: 500;
+  font-size: 13px;
+  text-align: center;
+  padding: 0 16px;
 }
 .state-msg {
   max-width: 960px;

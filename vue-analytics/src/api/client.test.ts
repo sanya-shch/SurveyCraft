@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { AUTH_EXPIRED_EVENT } from "@surveycraft/shared-types";
-import { apiGet, ApiError } from "./client";
+import { apiGet, apiPost, apiDownload, ApiError } from "./client";
 
 describe("apiGet", () => {
   const originalFetch = globalThis.fetch;
@@ -87,5 +87,97 @@ describe("apiGet", () => {
     expect(eventListener).not.toHaveBeenCalled();
 
     window.removeEventListener(AUTH_EXPIRED_EVENT, eventListener);
+  });
+});
+
+describe("apiPost", () => {
+  const originalFetch = globalThis.fetch;
+
+  beforeEach(() => {
+    localStorage.clear();
+  });
+
+  afterEach(() => {
+    globalThis.fetch = originalFetch;
+    vi.restoreAllMocks();
+  });
+
+  it("надсилає JSON-тіло з Content-Type header і методом POST", async () => {
+    const fetchMock = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ id: "job-1" }) });
+    globalThis.fetch = fetchMock as unknown as typeof fetch;
+
+    await apiPost("http://api.test", "/forms/1/export", { format: "CSV" });
+
+    expect(fetchMock).toHaveBeenCalledWith("http://api.test/forms/1/export", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ format: "CSV" }),
+    });
+  });
+
+  it("додає Authorization header поряд з Content-Type, коли токен є", async () => {
+    localStorage.setItem("token", "abc123");
+    const fetchMock = vi.fn().mockResolvedValue({ ok: true, json: async () => ({}) });
+    globalThis.fetch = fetchMock as unknown as typeof fetch;
+
+    await apiPost("http://api.test", "/x", {});
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      "http://api.test/x",
+      expect.objectContaining({
+        headers: { Authorization: "Bearer abc123", "Content-Type": "application/json" },
+      }),
+    );
+  });
+
+  it("кидає ApiError при неуспішній відповіді, як і apiGet", async () => {
+    const fetchMock = vi.fn().mockResolvedValue({ ok: false, status: 500, json: async () => ({}) });
+    globalThis.fetch = fetchMock as unknown as typeof fetch;
+
+    await expect(apiPost("http://api.test", "/x", {})).rejects.toBeInstanceOf(ApiError);
+  });
+});
+
+describe("apiDownload", () => {
+  const originalFetch = globalThis.fetch;
+
+  afterEach(() => {
+    globalThis.fetch = originalFetch;
+    vi.restoreAllMocks();
+  });
+
+  it("повертає blob і ім'я файлу з Content-Disposition", async () => {
+    const fakeBlob = new Blob(["дані"], { type: "text/csv" });
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      blob: async () => fakeBlob,
+      headers: new Headers({ "content-disposition": 'attachment; filename="export.csv"' }),
+    });
+    globalThis.fetch = fetchMock as unknown as typeof fetch;
+
+    const result = await apiDownload("http://api.test", "/forms/1/export/job-1/download");
+
+    expect(result.blob).toBe(fakeBlob);
+    expect(result.fileName).toBe("export.csv");
+  });
+
+  it("fileName - null, якщо Content-Disposition відсутній", async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      blob: async () => new Blob(["x"]),
+      headers: new Headers(),
+    });
+    globalThis.fetch = fetchMock as unknown as typeof fetch;
+
+    const result = await apiDownload("http://api.test", "/x");
+
+    expect(result.fileName).toBeNull();
+  });
+
+  it("кидає ApiError при неуспішній відповіді", async () => {
+    const fetchMock = vi.fn().mockResolvedValue({ ok: false, status: 404, headers: new Headers() });
+    globalThis.fetch = fetchMock as unknown as typeof fetch;
+
+    await expect(apiDownload("http://api.test", "/x")).rejects.toBeInstanceOf(ApiError);
   });
 });

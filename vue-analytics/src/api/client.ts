@@ -12,11 +12,19 @@ export class ApiError extends Error {
   }
 }
 
-export const apiGet = async <T>(apiBaseUrl: string, path: string): Promise<T> => {
+const request = async (
+  apiBaseUrl: string,
+  path: string,
+  options: RequestInit = {},
+): Promise<Response> => {
   const token = localStorage.getItem(AUTH_TOKEN_STORAGE_KEY);
 
   const res = await fetch(`${apiBaseUrl}${path}`, {
-    headers: token ? { Authorization: `Bearer ${token}` } : {},
+    ...options,
+    headers: {
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      ...options.headers,
+    },
   });
 
   if (!res.ok) {
@@ -34,5 +42,30 @@ export const apiGet = async <T>(apiBaseUrl: string, path: string): Promise<T> =>
     throw new ApiError(res.status, `Запит завершився помилкою ${res.status}`);
   }
 
+  return res;
+};
+
+export const apiGet = async <T>(apiBaseUrl: string, path: string): Promise<T> => {
+  const res = await request(apiBaseUrl, path);
   return res.json() as Promise<T>;
+};
+
+export const apiPost = async <T>(apiBaseUrl: string, path: string, body: unknown): Promise<T> => {
+  const res = await request(apiBaseUrl, path, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  return res.json() as Promise<T>;
+};
+
+export const apiDownload = async (
+  apiBaseUrl: string,
+  path: string,
+): Promise<{ blob: Blob; fileName: string | null }> => {
+  const res = await request(apiBaseUrl, path);
+  const blob = await res.blob();
+  const disposition = res.headers.get("content-disposition");
+  const match = disposition?.match(/filename="?([^"]+)"?/);
+  return { blob, fileName: match?.[1] ?? null };
 };
