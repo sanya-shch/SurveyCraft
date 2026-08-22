@@ -1,7 +1,9 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { RouterProvider } from "react-router-dom";
+import { Suspense } from "react";
 import { router } from "./routes";
 import { useAuthExpiredListener } from "./store/useAuthExpiredListener";
+import RouteLoadingFallback from "./components/ui/RouteLoadingFallback";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -17,7 +19,9 @@ function App() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <RouterProvider router={router} />
+      <Suspense fallback={<RouteLoadingFallback />}>
+        <RouterProvider router={router} />
+      </Suspense>
     </QueryClientProvider>
   );
 }

@@ -34,6 +34,20 @@ const resolveVisibleIdsForResponse = (
   return new Set(allQuestionIds.filter((id) => answers?.[id] !== undefined));
 };
 
+type QuestionAccumulator = {
+  type: string;
+  shownCount: number;
+  answeredCount: number;
+  textCounts?: Map<string, number>;
+  numberSum: number;
+  numberCount: number;
+  numberMin?: number;
+  numberMax?: number;
+  choiceCounts?: Map<string, number>;
+  trueCount: number;
+  falseCount: number;
+};
+
 export const getFormAnalytics = async (
   formId: string,
   userId: string,
@@ -53,43 +67,84 @@ export const getFormAnalytics = async (
 
   const totalResponses = responses.length;
 
-  const parsed = responses.map((r) => r.answers as Answers);
   const allQuestionIds = form.questions.map((q) => q.id);
-  const visibleSets = responses.map((r) => resolveVisibleIdsForResponse(r, allQuestionIds));
+
+  const accumulators = new Map<string, QuestionAccumulator>();
+
+  for (const q of form.questions) {
+    accumulators.set(q.id, {
+      type: q.type,
+      shownCount: 0,
+      answeredCount: 0,
+      textCounts: q.type === "TEXT" || q.type === "DATE" ? new Map() : undefined,
+      numberSum: 0,
+      numberCount: 0,
+      choiceCounts: q.type === "CHOICE_SINGLE" || q.type === "CHOICE_MULTI" ? new Map() : undefined,
+      trueCount: 0,
+      falseCount: 0,
+    });
+  }
+
+  for (const response of responses) {
+    const visibleIds = resolveVisibleIdsForResponse(response, allQuestionIds);
+    const answers = response.answers as Answers;
+
+    for (const qId of visibleIds) {
+      const acc = accumulators.get(qId);
+      if (!acc) continue; // питання видалене з форми після цієї відповіді
+
+      acc.shownCount++;
+
+      const value = answers?.[qId];
+      if (value === undefined) continue; // показане, але пропущене (skippedCount)
+
+      acc.answeredCount++;
+
+      if (acc.type === "TEXT" || acc.type === "DATE") {
+        const key = value as string;
+        acc.textCounts!.set(key, (acc.textCounts!.get(key) || 0) + 1);
+      } else if (acc.type === "NUMBER") {
+        const n = value as number;
+        acc.numberSum += n;
+        acc.numberCount += 1;
+        acc.numberMin = acc.numberMin === undefined ? n : Math.min(acc.numberMin, n);
+        acc.numberMax = acc.numberMax === undefined ? n : Math.max(acc.numberMax, n);
+      } else if (acc.type === "CHOICE_SINGLE") {
+        if (typeof value === "string") {
+          acc.choiceCounts!.set(value, (acc.choiceCounts!.get(value) || 0) + 1);
+        }
+      } else if (acc.type === "CHOICE_MULTI") {
+        if (Array.isArray(value)) {
+          for (const v of value) {
+            acc.choiceCounts!.set(v, (acc.choiceCounts!.get(v) || 0) + 1);
+          }
+        }
+      } else if (acc.type === "BOOLEAN") {
+        if (value === true) acc.trueCount++;
+        else if (value === false) acc.falseCount++;
+      }
+    }
+  }
 
   const questions: QuestionOverview[] = [];
 
   for (const q of form.questions) {
-    const values = parsed.map((a) => a[q.id]).filter((v) => v !== undefined);
-
-    const shownCount = visibleSets.filter((s) => s.has(q.id)).length;
-    const hiddenCount = totalResponses - shownCount;
-    const skippedCount = shownCount - values.length;
-    const visibility = { shownCount, skippedCount, hiddenCount };
+    const acc = accumulators.get(q.id)!;
+    const visibility = {
+      shownCount: acc.shownCount,
+      skippedCount: acc.shownCount - acc.answeredCount,
+      hiddenCount: totalResponses - acc.shownCount,
+    };
 
     if (q.type === "TEXT" || q.type === "DATE") {
-      const map: Record<string, number> = {};
-
-      for (const val of values as string[]) {
-        map[val] = (map[val] || 0) + 1;
-      }
-
-      const preview = Object.entries(map)
+      const preview = Array.from(acc.textCounts!.entries())
         .map(([value, count]) => ({ value, count }))
         .sort((a, b) => b.count - a.count)
         .slice(0, 5);
 
-      questions.push({
-        id: q.id,
-        text: q.text,
-        type: q.type,
-        preview,
-        ...visibility,
-      });
+      questions.push({ id: q.id, text: q.text, type: q.type, preview, ...visibility });
     } else if (q.type === "NUMBER") {
-      const nums = values as number[];
-
-      if (!nums.length) {
+      if (acc.numberCount === 0) {
         questions.push({
           id: q.id,
           text: q.text,
@@ -105,42 +160,14 @@ export const getFormAnalytics = async (
         text: q.text,
         type: "NUMBER",
         stats: {
-          avg: nums.reduce((a, b) => a + b, 0) / nums.length,
-          min: Math.min(...nums),
-          max: Math.max(...nums),
+          avg: acc.numberSum / acc.numberCount,
+          min: acc.numberMin!,
+          max: acc.numberMax!,
         },
         ...visibility,
       });
     } else if (q.type === "CHOICE_SINGLE" || q.type === "CHOICE_MULTI") {
       const options = (q.options as { id: string; text: string }[]) ?? [];
-
-      const distribution: Record<string, number> = {};
-
-      for (const option of options) {
-        distribution[option.id] = 0;
-      }
-
-      for (const response of responses) {
-        const answer = (response.answers as Answers)?.[q.id];
-
-        if (!answer) continue;
-
-        if (q.type === "CHOICE_SINGLE") {
-          if (typeof answer === "string" && distribution[answer] !== undefined) {
-            distribution[answer]++;
-          }
-        }
-
-        if (q.type === "CHOICE_MULTI") {
-          if (Array.isArray(answer)) {
-            for (const val of answer) {
-              if (distribution[val] !== undefined) {
-                distribution[val]++;
-              }
-            }
-          }
-        }
-      }
 
       questions.push({
         id: q.id,
@@ -149,19 +176,17 @@ export const getFormAnalytics = async (
         distribution: options.map((opt) => ({
           optionId: opt.id,
           text: opt.text,
-          count: distribution[opt.id] ?? 0,
+          count: acc.choiceCounts!.get(opt.id) ?? 0,
         })),
         ...visibility,
       });
     } else if (q.type === "BOOLEAN") {
-      const bools = values as boolean[];
-
       questions.push({
         id: q.id,
         type: "BOOLEAN",
         text: q.text,
-        trueCount: bools.filter((v) => v === true).length,
-        falseCount: bools.filter((v) => v === false).length,
+        trueCount: acc.trueCount,
+        falseCount: acc.falseCount,
         ...visibility,
       });
     }

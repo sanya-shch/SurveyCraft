@@ -1,12 +1,14 @@
 import { createBrowserRouter, Navigate } from "react-router-dom";
-import Login from "./pages/auth/Login";
-import Register from "./pages/auth/Register";
-import Dashboard from "./pages/dashboard/Dashboard";
-import FormBuilder from "./pages/builder/FormBuilder";
+import { lazy } from "react";
 import ProtectedRoute from "./components/ProtectedRoute";
-import PublicFormPage from "./pages/viewer/PublicFormPage";
-import FormAnalyticsPage from "./pages/analytics/FormAnalyticsPage";
-import QuestionDetailsPage from "./pages/analytics/components/QuestionDetailsPage";
+
+const Login = lazy(() => import("./pages/auth/Login"));
+const Register = lazy(() => import("./pages/auth/Register"));
+const Dashboard = lazy(() => import("./pages/dashboard/Dashboard"));
+const FormBuilder = lazy(() => import("./pages/builder/FormBuilder"));
+const PublicFormPage = lazy(() => import("./pages/viewer/PublicFormPage"));
+const FormAnalyticsPage = lazy(() => import("./pages/analytics/FormAnalyticsPage"));
+const QuestionDetailsPage = lazy(() => import("./pages/analytics/components/QuestionDetailsPage"));
 
 export const router = createBrowserRouter([
   { path: "/login", element: <Login /> },
