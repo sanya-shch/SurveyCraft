@@ -7,7 +7,7 @@ beforeAll(() => {
   process.env.JWT_SECRET = TEST_SECRET;
 });
 
-describe("generateToken", () => {
+describe("generateAccessToken / generateToken", () => {
   it("генерує токен, який верифікується тим самим секретом і містить payload", async () => {
     const { generateToken } = await import("./jwt.js");
 
@@ -32,5 +32,56 @@ describe("generateToken", () => {
     const token = generateToken({ userId: "user-1" });
 
     expect(() => jwt.verify(token, "wrong-secret")).toThrow();
+  });
+
+  it("generateAccessToken і generateToken - одна й та сама функція", async () => {
+    const { generateAccessToken, generateToken } = await import("./jwt.js");
+
+    expect(generateAccessToken).toBe(generateToken);
+  });
+});
+
+describe("verifyAccessToken", () => {
+  it("повертає payload дійсного токена", async () => {
+    const { generateToken, verifyAccessToken } = await import("./jwt.js");
+
+    const token = generateToken({ userId: "user-7" });
+
+    expect(verifyAccessToken(token)).toMatchObject({ userId: "user-7" });
+  });
+
+  it("кидає помилку для токена з чужим секретом", async () => {
+    const { verifyAccessToken } = await import("./jwt.js");
+    const foreignToken = jwt.sign({ userId: "user-1" }, "wrong-secret");
+
+    expect(() => verifyAccessToken(foreignToken)).toThrow();
+  });
+});
+
+describe("generateRefreshToken / hashRefreshToken", () => {
+  it("повертає сирий токен, його SHA-256 хеш і дату спливу в майбутньому", async () => {
+    const { generateRefreshToken, hashRefreshToken } = await import("./jwt.js");
+
+    const { token, tokenHash, expiresAt } = generateRefreshToken();
+
+    expect(token).toMatch(/^[0-9a-f]+$/);
+    expect(tokenHash).toBe(hashRefreshToken(token));
+    expect(expiresAt.getTime()).toBeGreaterThan(Date.now());
+  });
+
+  it("кожен виклик генерує унікальний токен", async () => {
+    const { generateRefreshToken } = await import("./jwt.js");
+
+    const first = generateRefreshToken();
+    const second = generateRefreshToken();
+
+    expect(first.token).not.toBe(second.token);
+  });
+
+  it("hashRefreshToken - детермінований (однаковий токен -> однаковий хеш)", async () => {
+    const { hashRefreshToken } = await import("./jwt.js");
+
+    expect(hashRefreshToken("abc")).toBe(hashRefreshToken("abc"));
+    expect(hashRefreshToken("abc")).not.toBe(hashRefreshToken("abd"));
   });
 });

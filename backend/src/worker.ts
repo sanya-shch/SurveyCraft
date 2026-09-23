@@ -1,5 +1,9 @@
 import "dotenv/config";
-import { createExportWorker } from "./modules/export/export.worker.js";
+import { validateEnv } from "./config/env.js";
+
+validateEnv();
+
+const { createExportWorker } = await import("./modules/export/export.worker.js");
 
 const exportWorker = createExportWorker();
 

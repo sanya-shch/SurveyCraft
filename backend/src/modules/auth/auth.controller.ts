@@ -1,36 +1,77 @@
-import { Request, Response } from 'express';
-import { prisma } from '../../prisma/prisma.js';
-import { loginHandler, registerUser } from './auth.service.js';
+import { Request, Response } from "express";
+import { prisma } from "../../prisma/prisma.js";
 import {
+  loginHandler,
+  refreshAccessToken,
+  registerUser,
+  revokeRefreshToken,
+} from "./auth.service.js";
+import {
+  AuthUser,
   GetMeDto,
   LoginDto,
   LoginInput,
+  RefreshDto,
   RegisterDto,
   RegisterInput,
-} from './auth.types.js';
-import { AuthLocals } from '../../shared/middleware/auth.js';
-import { AppError } from '../../shared/middleware/errorHandler.js';
+} from "./auth.types.js";
+import { AuthLocals } from "../../shared/middleware/auth.js";
+import { AppError } from "../../shared/middleware/errorHandler.js";
+import {
+  clearRefreshTokenCookieOptions,
+  REFRESH_TOKEN_COOKIE_NAME,
+  refreshTokenCookieOptions,
+} from "../../shared/utils/cookies.js";
 
-export const register = async (
-  req: Request<{}, {}, RegisterInput>,
-  res: Response<RegisterDto>
+const sendAuthResponse = (
+  res: Response<RegisterDto | LoginDto>,
+  tokens: { accessToken: string; refreshToken: string; refreshTokenExpiresAt: Date },
+  user: AuthUser,
 ) => {
-  const { email, password } = req.body;
-
-  const result = await registerUser(email, password);
-
-  res.json(result);
+  res.cookie(
+    REFRESH_TOKEN_COOKIE_NAME,
+    tokens.refreshToken,
+    refreshTokenCookieOptions(tokens.refreshTokenExpiresAt),
+  );
+  res.json({ accessToken: tokens.accessToken, user });
 };
 
-export const login = async (
-  req: Request<{}, {}, LoginInput>,
-  res: Response<LoginDto>
-) => {
+export const register = async (req: Request<{}, {}, RegisterInput>, res: Response<RegisterDto>) => {
   const { email, password } = req.body;
 
-  const result = await loginHandler(email, password);
+  const { user, ...tokens } = await registerUser(email, password);
 
-  res.json(result);
+  sendAuthResponse(res, tokens, user);
+};
+
+export const login = async (req: Request<{}, {}, LoginInput>, res: Response<LoginDto>) => {
+  const { email, password } = req.body;
+
+  const { user, ...tokens } = await loginHandler(email, password);
+
+  sendAuthResponse(res, tokens, user);
+};
+
+export const refresh = async (req: Request, res: Response<RefreshDto>) => {
+  const refreshToken = req.cookies?.[REFRESH_TOKEN_COOKIE_NAME] as string | undefined;
+
+  const tokens = await refreshAccessToken(refreshToken);
+
+  res.cookie(
+    REFRESH_TOKEN_COOKIE_NAME,
+    tokens.refreshToken,
+    refreshTokenCookieOptions(tokens.refreshTokenExpiresAt),
+  );
+  res.json({ accessToken: tokens.accessToken });
+};
+
+export const logout = async (req: Request, res: Response<{ success: true }>) => {
+  const refreshToken = req.cookies?.[REFRESH_TOKEN_COOKIE_NAME] as string | undefined;
+
+  await revokeRefreshToken(refreshToken);
+
+  res.clearCookie(REFRESH_TOKEN_COOKIE_NAME, clearRefreshTokenCookieOptions());
+  res.json({ success: true });
 };
 
 export const getMeHandler = async (req: Request, res: Response<GetMeDto>) => {
@@ -41,13 +82,11 @@ export const getMeHandler = async (req: Request, res: Response<GetMeDto>) => {
     select: {
       id: true,
       email: true,
-      // createdAt: true,
-      // forms: true
     },
   });
 
   if (!user) {
-    throw new AppError('User not found', 404);
+    throw new AppError("User not found", 404);
   }
 
   res.json(user);

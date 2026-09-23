@@ -1,7 +1,10 @@
-import app from './app.js';
+import 'dotenv/config';
+import { validateEnv } from './config/env.js';
 
-const PORT = 5001;
+const env = validateEnv();
 
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+const { default: app } = await import('./app.js');
+
+app.listen(env.PORT, () => {
+  console.log(`Server running on port ${env.PORT}`);
 });

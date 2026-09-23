@@ -1,43 +1,71 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
+const { Prisma } = await import("@prisma/client");
 
 const { prisma } = await import("../../prisma/prisma.js");
 const bcrypt = (await import("bcrypt")).default;
-const jwt = (await import("jsonwebtoken")).default;
-const { generateToken } = await import("../../shared/utils/jwt.js");
-const { registerUser, loginHandler } = await import("./auth.service.js");
+const { generateAccessToken, generateRefreshToken, hashRefreshToken } =
+  await import("../../shared/utils/jwt.js");
+const { loginHandler, refreshAccessToken, registerUser, revokeRefreshToken } =
+  await import("./auth.service.js");
 
 vi.mock("../../prisma/prisma.js", () => ({
   prisma: {
     user: { create: vi.fn(), findUnique: vi.fn() },
+    refreshToken: {
+      create: vi.fn(),
+      findUnique: vi.fn(),
+      update: vi.fn(),
+      updateMany: vi.fn(),
+    },
   },
 }));
+
+// Реальний @prisma/client тут не потрібен (і в цьому середовищі клієнт
+// взагалі не згенерований) - мокаємо лише мінімальний клас помилки, який
+// production-код перевіряє через `instanceof Prisma.PrismaClientKnownRequestError`.
+vi.mock("@prisma/client", () => {
+  class PrismaClientKnownRequestError extends Error {
+    code: string;
+    constructor(message: string, options: { code: string }) {
+      super(message);
+      this.code = options.code;
+    }
+  }
+
+  return { Prisma: { PrismaClientKnownRequestError } };
+});
 
 vi.mock("bcrypt", () => ({
   default: { hash: vi.fn(), compare: vi.fn() },
 }));
 
-vi.mock("jsonwebtoken", () => ({
-  default: { sign: vi.fn(), verify: vi.fn() },
+vi.mock("../../shared/utils/jwt.js", () => ({
+  generateAccessToken: vi.fn(),
+  generateRefreshToken: vi.fn(),
+  hashRefreshToken: vi.fn((token: string) => `hashed-${token}`),
 }));
 
-vi.mock("../../shared/utils/jwt.js", () => ({
-  generateToken: vi.fn(),
-}));
+const REFRESH_EXPIRES_AT = new Date("2099-01-01T00:00:00.000Z");
 
 beforeEach(() => {
   vi.clearAllMocks();
   process.env.JWT_SECRET = "test-secret";
+  (generateAccessToken as any).mockReturnValue("access-token");
+  (generateRefreshToken as any).mockReturnValue({
+    token: "raw-refresh-token",
+    tokenHash: "hashed-raw-refresh-token",
+    expiresAt: REFRESH_EXPIRES_AT,
+  });
 });
 
 describe("registerUser", () => {
-  it("хешує пароль перед збереженням і повертає токен + користувача без password", async () => {
+  it("хешує пароль, зберігає хеш refresh-токена і повертає обидва токени + користувача без password", async () => {
     (bcrypt.hash as any).mockResolvedValue("hashed-pw");
     (prisma.user.create as any).mockResolvedValue({
       id: "user-1",
       email: "a@b.com",
       password: "hashed-pw",
     });
-    (generateToken as any).mockReturnValue("jwt-token");
 
     const result = await registerUser("a@b.com", "plain-password");
 
@@ -45,13 +73,48 @@ describe("registerUser", () => {
     expect(prisma.user.create).toHaveBeenCalledWith({
       data: { email: "a@b.com", password: "hashed-pw" },
     });
-    expect(generateToken).toHaveBeenCalledWith({ userId: "user-1" });
+    expect(generateAccessToken).toHaveBeenCalledWith({ userId: "user-1" });
+    expect(prisma.refreshToken.create).toHaveBeenCalledWith({
+      data: {
+        tokenHash: "hashed-raw-refresh-token",
+        userId: "user-1",
+        expiresAt: REFRESH_EXPIRES_AT,
+      },
+    });
     expect(result).toEqual({
-      token: "jwt-token",
+      accessToken: "access-token",
+      refreshToken: "raw-refresh-token",
+      refreshTokenExpiresAt: REFRESH_EXPIRES_AT,
       user: { id: "user-1", email: "a@b.com" },
     });
-    // пароль (навіть хешований) не повинен потрапляти у відповідь
     expect(result.user).not.toHaveProperty("password");
+  });
+
+  it('кидає 409 "Email already in use", якщо email вже зайнятий (P2002), і НЕ видає токени', async () => {
+    (bcrypt.hash as any).mockResolvedValue("hashed-pw");
+    (prisma.user.create as any).mockRejectedValue(
+      new Prisma.PrismaClientKnownRequestError(
+        "Unique constraint failed on the fields: (`email`)",
+        {
+          code: "P2002",
+        },
+      ),
+    );
+
+    await expect(registerUser("a@b.com", "plain-password")).rejects.toMatchObject({
+      statusCode: 409,
+      message: "Email already in use",
+    });
+    expect(generateAccessToken).not.toHaveBeenCalled();
+    expect(prisma.refreshToken.create).not.toHaveBeenCalled();
+  });
+
+  it("прокидає далі помилки, не пов'язані з унікальністю email", async () => {
+    (bcrypt.hash as any).mockResolvedValue("hashed-pw");
+    const dbDown = new Error("connection refused");
+    (prisma.user.create as any).mockRejectedValue(dbDown);
+
+    await expect(registerUser("a@b.com", "plain-password")).rejects.toBe(dbDown);
   });
 });
 
@@ -80,22 +143,106 @@ describe("loginHandler", () => {
     });
   });
 
-  it("повертає токен і користувача без password при коректних кредах", async () => {
+  it("повертає ту саму пару токенів, що й реєстрація (єдине джерело TTL), і користувача без password", async () => {
     (prisma.user.findUnique as any).mockResolvedValue({
       id: "user-1",
       email: "a@b.com",
       password: "hashed-pw",
     });
     (bcrypt.compare as any).mockResolvedValue(true);
-    (jwt.sign as any).mockReturnValue("jwt-token");
 
     const result = await loginHandler("a@b.com", "correct-pw");
 
     expect(bcrypt.compare).toHaveBeenCalledWith("correct-pw", "hashed-pw");
-    expect(jwt.sign).toHaveBeenCalledWith({ userId: "user-1" }, "test-secret", { expiresIn: "7d" });
+    expect(generateAccessToken).toHaveBeenCalledWith({ userId: "user-1" });
     expect(result).toEqual({
-      token: "jwt-token",
+      accessToken: "access-token",
+      refreshToken: "raw-refresh-token",
+      refreshTokenExpiresAt: REFRESH_EXPIRES_AT,
       user: { id: "user-1", email: "a@b.com" },
+    });
+  });
+});
+
+describe("refreshAccessToken", () => {
+  it("кидає 401, якщо refresh-токен не передано", async () => {
+    await expect(refreshAccessToken(undefined)).rejects.toMatchObject({ statusCode: 401 });
+    expect(prisma.refreshToken.findUnique).not.toHaveBeenCalled();
+  });
+
+  it("кидає 401, якщо токена немає в БД", async () => {
+    (prisma.refreshToken.findUnique as any).mockResolvedValue(null);
+
+    await expect(refreshAccessToken("some-token")).rejects.toMatchObject({ statusCode: 401 });
+  });
+
+  it("кидає 401 для вже відкликаного токена", async () => {
+    (prisma.refreshToken.findUnique as any).mockResolvedValue({
+      id: "rt-1",
+      userId: "user-1",
+      revokedAt: new Date(),
+      expiresAt: REFRESH_EXPIRES_AT,
+    });
+
+    await expect(refreshAccessToken("some-token")).rejects.toMatchObject({ statusCode: 401 });
+    expect(prisma.refreshToken.update).not.toHaveBeenCalled();
+  });
+
+  it("кидає 401 для протухлого токена", async () => {
+    (prisma.refreshToken.findUnique as any).mockResolvedValue({
+      id: "rt-1",
+      userId: "user-1",
+      revokedAt: null,
+      expiresAt: new Date("2000-01-01T00:00:00.000Z"),
+    });
+
+    await expect(refreshAccessToken("some-token")).rejects.toMatchObject({ statusCode: 401 });
+  });
+
+  it("відкликає старий токен і видає нову пару (ротація)", async () => {
+    (prisma.refreshToken.findUnique as any).mockResolvedValue({
+      id: "rt-1",
+      userId: "user-1",
+      revokedAt: null,
+      expiresAt: REFRESH_EXPIRES_AT,
+    });
+
+    const result = await refreshAccessToken("old-raw-token");
+
+    expect(hashRefreshToken).toHaveBeenCalledWith("old-raw-token");
+    expect(prisma.refreshToken.update).toHaveBeenCalledWith({
+      where: { id: "rt-1" },
+      data: { revokedAt: expect.any(Date) },
+    });
+    expect(prisma.refreshToken.create).toHaveBeenCalledWith({
+      data: {
+        tokenHash: "hashed-raw-refresh-token",
+        userId: "user-1",
+        expiresAt: REFRESH_EXPIRES_AT,
+      },
+    });
+    expect(result).toEqual({
+      accessToken: "access-token",
+      refreshToken: "raw-refresh-token",
+      refreshTokenExpiresAt: REFRESH_EXPIRES_AT,
+    });
+  });
+});
+
+describe("revokeRefreshToken", () => {
+  it("нічого не робить, якщо токен не передано", async () => {
+    await revokeRefreshToken(undefined);
+
+    expect(prisma.refreshToken.updateMany).not.toHaveBeenCalled();
+  });
+
+  it("позначає токен відкликаним за його хешем", async () => {
+    await revokeRefreshToken("raw-token");
+
+    expect(hashRefreshToken).toHaveBeenCalledWith("raw-token");
+    expect(prisma.refreshToken.updateMany).toHaveBeenCalledWith({
+      where: { tokenHash: "hashed-raw-token", revokedAt: null },
+      data: { revokedAt: expect.any(Date) },
     });
   });
 });

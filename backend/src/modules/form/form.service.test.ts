@@ -246,6 +246,15 @@ describe("duplicateForm", () => {
     });
   });
 
+  it("кидає 403, якщо форма належить іншому користувачу (не дозволяє дублювати чужі форми)", async () => {
+    (prisma.form.findUnique as any).mockResolvedValue(mockForm({ title: "Оригінал" }));
+
+    await expect(duplicateForm(FORM_ID, OTHER_USER_ID)).rejects.toMatchObject({
+      statusCode: 403,
+    });
+    expect(prisma.$transaction).not.toHaveBeenCalled();
+  });
+
   it('створює копію з припискою "(Copy)", неопубліковану, з питаннями оригіналу', async () => {
     (prisma.form.findUnique as any).mockResolvedValue(
       mockForm({
@@ -271,13 +280,13 @@ describe("duplicateForm", () => {
       cb({ form: txForm, question: txQuestion }),
     );
 
-    const result = await duplicateForm(FORM_ID, OTHER_USER_ID);
+    const result = await duplicateForm(FORM_ID, OWNER_ID);
 
     expect(txForm.create).toHaveBeenCalledWith({
       data: {
         title: "Оригінал (Copy)",
         description: "опис",
-        userId: OTHER_USER_ID,
+        userId: OWNER_ID,
         isPublished: false,
       },
     });
@@ -303,7 +312,7 @@ describe("duplicateForm", () => {
       cb({ form: txForm, question: txQuestion }),
     );
 
-    await duplicateForm(FORM_ID, OTHER_USER_ID);
+    await duplicateForm(FORM_ID, OWNER_ID);
 
     expect(txForm.create).toHaveBeenCalledWith(
       expect.objectContaining({ data: expect.objectContaining({ responseMode: "STEP_BY_STEP" }) }),

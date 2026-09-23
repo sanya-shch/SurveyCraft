@@ -26,7 +26,20 @@ model User {
   password  String
   forms     Form[]
   exportJobs ExportJob[]
+  refreshTokens RefreshToken[]
   createdAt DateTime    @default(now())
+}
+
+model RefreshToken {
+  id        String    @id @default(uuid())
+  tokenHash String    @unique
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String
+  expiresAt DateTime
+  revokedAt DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([userId])
 }
 
 model Form {

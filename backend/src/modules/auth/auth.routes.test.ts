@@ -7,17 +7,28 @@ import { AppError } from "../../shared/middleware/errorHandler.js";
 vi.mock("./auth.service.js", () => ({
   registerUser: vi.fn(),
   loginHandler: vi.fn(),
+  refreshAccessToken: vi.fn(),
+  revokeRefreshToken: vi.fn(),
 }));
 
 vi.mock("../../prisma/prisma.js", () => ({
   prisma: { user: { findUnique: vi.fn() } },
 }));
 
-const { registerUser, loginHandler } = await import("./auth.service.js");
+const { registerUser, loginHandler, refreshAccessToken, revokeRefreshToken } = await import(
+  "./auth.service.js"
+);
 const { prisma } = await import("../../prisma/prisma.js");
 const authRouter = (await import("./auth.routes.js")).default;
 
 const app = buildTestApp(authRouter, "/api/auth");
+
+const STRONG_PASSWORD = "Str0ngPass";
+const TOKEN_PAIR = {
+  accessToken: "jwt-access-token",
+  refreshToken: "raw-refresh-token",
+  refreshTokenExpiresAt: new Date("2099-01-01T00:00:00.000Z"),
+};
 
 beforeAll(() => {
   process.env.JWT_SECRET = TEST_JWT_SECRET;
@@ -31,28 +42,43 @@ describe("POST /api/auth/register", () => {
   it("400, якщо тіло не проходить registerSchema (invalid email)", async () => {
     const res = await request(app)
       .post("/api/auth/register")
-      .send({ email: "not-an-email", password: "123456" });
+      .send({ email: "not-an-email", password: STRONG_PASSWORD });
 
     expect(res.status).toBe(400);
     expect(registerUser).not.toHaveBeenCalled();
   });
 
-  it("200 і токен для валідного тіла", async () => {
+  it("400, якщо пароль не задовольняє політику складності", async () => {
+    const res = await request(app)
+      .post("/api/auth/register")
+      .send({ email: "a@b.com", password: "alllowercase" });
+
+    expect(res.status).toBe(400);
+    expect(registerUser).not.toHaveBeenCalled();
+  });
+
+  it("200, accessToken у тілі та refreshToken лише в httpOnly cookie", async () => {
     (registerUser as any).mockResolvedValue({
-      token: "jwt-token",
+      ...TOKEN_PAIR,
       user: { id: "user-1", email: "a@b.com" },
     });
 
     const res = await request(app)
       .post("/api/auth/register")
-      .send({ email: "a@b.com", password: "123456" });
+      .send({ email: "a@b.com", password: STRONG_PASSWORD });
 
     expect(res.status).toBe(200);
     expect(res.body).toEqual({
-      token: "jwt-token",
+      accessToken: "jwt-access-token",
       user: { id: "user-1", email: "a@b.com" },
     });
-    expect(registerUser).toHaveBeenCalledWith("a@b.com", "123456");
+    expect(JSON.stringify(res.body)).not.toContain("raw-refresh-token");
+
+    const setCookie = res.headers["set-cookie"]?.[0] ?? "";
+    expect(setCookie).toContain("refreshToken=raw-refresh-token");
+    expect(setCookie.toLowerCase()).toContain("httponly");
+
+    expect(registerUser).toHaveBeenCalledWith("a@b.com", STRONG_PASSWORD);
   });
 
   it("пропускає помилку сервісу через errorHandler (напр. email вже зайнятий)", async () => {
@@ -60,7 +86,7 @@ describe("POST /api/auth/register", () => {
 
     const res = await request(app)
       .post("/api/auth/register")
-      .send({ email: "a@b.com", password: "123456" });
+      .send({ email: "a@b.com", password: STRONG_PASSWORD });
 
     expect(res.status).toBe(409);
     expect(res.body).toEqual({ message: "Email already in use", errors: null });
@@ -86,9 +112,9 @@ describe("POST /api/auth/login", () => {
     expect(res.body.message).toBe("Invalid credentials");
   });
 
-  it("200 і токен для правильних кредів", async () => {
+  it("200, accessToken у тілі для правильних кредів", async () => {
     (loginHandler as any).mockResolvedValue({
-      token: "jwt-token",
+      ...TOKEN_PAIR,
       user: { id: "user-1", email: "a@b.com" },
     });
 
@@ -97,7 +123,37 @@ describe("POST /api/auth/login", () => {
       .send({ email: "a@b.com", password: "correct1" });
 
     expect(res.status).toBe(200);
-    expect(res.body.token).toBe("jwt-token");
+    expect(res.body.accessToken).toBe("jwt-access-token");
+  });
+});
+
+describe("POST /api/auth/refresh", () => {
+  it("401, якщо refresh-cookie відсутня (сервіс кидає AppError)", async () => {
+    (refreshAccessToken as any).mockRejectedValue(new AppError("Refresh token is missing", 401));
+
+    const res = await request(app).post("/api/auth/refresh");
+
+    expect(res.status).toBe(401);
+    expect(refreshAccessToken).toHaveBeenCalledWith(undefined);
+  });
+
+  it("200 і новий accessToken + ротована refresh-cookie при дійсній cookie", async () => {
+    (refreshAccessToken as any).mockResolvedValue({
+      accessToken: "new-access-token",
+      refreshToken: "new-raw-refresh-token",
+      refreshTokenExpiresAt: new Date("2099-01-01T00:00:00.000Z"),
+    });
+
+    const res = await request(app)
+      .post("/api/auth/refresh")
+      .set("Cookie", ["refreshToken=old-raw-refresh-token"]);
+
+    expect(res.status).toBe(200);
+    expect(res.body).toEqual({ accessToken: "new-access-token" });
+    expect(refreshAccessToken).toHaveBeenCalledWith("old-raw-refresh-token");
+
+    const setCookie = res.headers["set-cookie"]?.[0] ?? "";
+    expect(setCookie).toContain("refreshToken=new-raw-refresh-token");
   });
 });
 
@@ -148,10 +204,23 @@ describe("GET /api/auth/me", () => {
 });
 
 describe("POST /api/auth/logout", () => {
-  it("200 без потреби в автентифікації", async () => {
-    const res = await request(app).post("/api/auth/logout");
+  it("200, відкликає refresh-токен із cookie (якщо є) і очищає cookie", async () => {
+    const res = await request(app)
+      .post("/api/auth/logout")
+      .set("Cookie", ["refreshToken=raw-refresh-token"]);
 
     expect(res.status).toBe(200);
     expect(res.body).toEqual({ success: true });
+    expect(revokeRefreshToken).toHaveBeenCalledWith("raw-refresh-token");
+
+    const setCookie = res.headers["set-cookie"]?.[0] ?? "";
+    expect(setCookie).toMatch(/refreshToken=;/);
+  });
+
+  it("200 навіть без cookie (без активної сесії)", async () => {
+    const res = await request(app).post("/api/auth/logout");
+
+    expect(res.status).toBe(200);
+    expect(revokeRefreshToken).toHaveBeenCalledWith(undefined);
   });
 });

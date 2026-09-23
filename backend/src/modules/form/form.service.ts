@@ -232,6 +232,7 @@ export const duplicateForm = async (formId: string, userId: string) => {
   });
 
   if (!form) throw new AppError("Form not found", 404);
+  if (form.userId !== userId) throw new AppError("Forbidden", 403);
 
   return prisma.$transaction(async (tx) => {
     const newForm = await tx.form.create({

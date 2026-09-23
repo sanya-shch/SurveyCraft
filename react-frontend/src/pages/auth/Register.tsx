@@ -23,7 +23,7 @@ export default function Register() {
   const registerMutation = useMutation({
     mutationFn: authApi.register,
     onSuccess: (data) => {
-      setAuth(data.user, data.token);
+      setAuth(data.user, data.accessToken);
       navigate("/dashboard");
     },
     onError: (error: AxiosError<{ message?: string }>) => {

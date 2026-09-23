@@ -21,6 +21,15 @@ describe("authMiddleware", () => {
     expect(next).not.toHaveBeenCalled();
   });
 
+  it("кидає 401, якщо заголовок не має префіксу Bearer", async () => {
+    const { authMiddleware } = await import("./auth.js");
+    const token = jwt.sign({ userId: "user-1" }, TEST_SECRET);
+    const next = vi.fn();
+
+    expect(() => authMiddleware(makeReq(token), makeRes(), next)).toThrow(AppError);
+    expect(next).not.toHaveBeenCalled();
+  });
+
   it("кидає 401 для невалідного/протухлого токена", async () => {
     const { authMiddleware } = await import("./auth.js");
     const next = vi.fn();

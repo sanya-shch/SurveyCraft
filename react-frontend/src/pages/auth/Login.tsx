@@ -23,7 +23,7 @@ export default function Login() {
   const loginMutation = useMutation({
     mutationFn: authApi.login,
     onSuccess: (data) => {
-      setAuth(data.user, data.token);
+      setAuth(data.user, data.accessToken);
       navigate("/dashboard");
     },
     onError: (error: AxiosError<{ message?: string }>) => {

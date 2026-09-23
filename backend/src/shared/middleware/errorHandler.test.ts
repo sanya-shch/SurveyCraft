@@ -48,20 +48,39 @@ describe("errorHandler", () => {
     expect(res.json).toHaveBeenCalledWith({ message: "Not found", errors: null });
   });
 
-  it("для будь-якої іншої помилки повертає 500 і не витікає деталей", () => {
+  it("для будь-якої іншої помилки повертає 500, не витікає деталей у відповідь, але логує в консоль", () => {
     const res = makeRes();
+    const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+    const internalError = new Error("щось секретне про БД");
 
-    errorHandler(new Error("щось секретне про БД"), {} as any, res, vi.fn());
+    errorHandler(internalError, {} as any, res, vi.fn());
 
     expect(res.status).toHaveBeenCalledWith(500);
     expect(res.json).toHaveBeenCalledWith({ message: "Internal Server Error" });
+    expect(consoleSpy).toHaveBeenCalledWith(internalError);
+
+    consoleSpy.mockRestore();
+  });
+
+  it("для AppError НІЧОГО не логує в консоль (це очікуваний потік, а не збій сервера)", () => {
+    const res = makeRes();
+    const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+
+    errorHandler(new AppError("Not found", 404), {} as any, res, vi.fn());
+
+    expect(consoleSpy).not.toHaveBeenCalled();
+
+    consoleSpy.mockRestore();
   });
 
   it('обробляє навіть не-Error значення (throw "рядок")', () => {
     const res = makeRes();
+    const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
 
     errorHandler("щось незрозуміле", {} as any, res, vi.fn());
 
     expect(res.status).toHaveBeenCalledWith(500);
+
+    consoleSpy.mockRestore();
   });
 });

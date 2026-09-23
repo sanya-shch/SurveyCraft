@@ -1,0 +1,69 @@
+import { z } from "zod";
+
+/**
+ * Раніше майже кожен модуль читав process.env.X! напряму (non-null
+ * assertion) - якщо змінну забути виставити, застосунок падав десь
+ * углибині коду (наприклад, jwt.sign отримував "undefined" як секрет) із
+ * незрозумілою помилкою, а не одразу при старті. Тут - єдине джерело
+ * правди для того, які змінні середовища взагалі потрібні застосунку.
+ */
+const envSchema = z.object({
+  NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
+  PORT: z.coerce.number().int().positive().default(5001),
+  JWT_SECRET: z.string().min(1, "JWT_SECRET є обов'язковим"),
+  DATABASE_URL: z.string().min(1, "DATABASE_URL є обов'язковим"),
+  REDIS_URL: z.string().min(1).default("redis://localhost:6379"),
+  CORS_ORIGIN: z.string().default("http://localhost:5173"),
+});
+
+export type Env = z.infer<typeof envSchema>;
+
+/**
+ * Повна валідація process.env - викликається явно з точок входу
+ * (server.ts, worker.ts), а НЕ з app.ts чи будь-якого модуля, що
+ * імпортується тестами: тести виставляють лише ті змінні, які їм
+ * реально потрібні (наприклад, лише JWT_SECRET), і не повинні падати
+ * через відсутність DATABASE_URL чи інших несуттєвих для конкретного
+ * тесту змінних. Якщо щось не так - кидає ОДНУ помилку з повним списком
+ * усіх проблем одразу, замість того, щоб застосунок падав по черзі на
+ * кожній відсутній змінній.
+ */
+export const validateEnv = (): Env => {
+  const result = envSchema.safeParse(process.env);
+
+  if (!result.success) {
+    const details = result.error.issues
+      .map((issue) => `  - ${issue.path.join(".")}: ${issue.message}`)
+      .join("\n");
+    throw new Error(`Некоректна конфігурація середовища:\n${details}`);
+  }
+
+  return result.data;
+};
+
+/**
+ * Точкові гетери для окремих модулів (jwt.ts, prisma.ts,
+ * redisConnection.ts). Читають process.env у момент ВИКЛИКУ, а не при
+ * імпорті модуля - це свідомо, щоб не ламати наявні тести, які
+ * встановлюють env-змінні в beforeAll/beforeEach ПЕРЕД динамічним
+ * імпортом модуля, що їх використовує.
+ */
+export const getJwtSecret = (): string => {
+  const value = process.env.JWT_SECRET;
+  if (!value) {
+    throw new Error("JWT_SECRET не задано в середовищі");
+  }
+  return value;
+};
+
+export const getDatabaseUrl = (): string => {
+  const value = process.env.DATABASE_URL;
+  if (!value) {
+    throw new Error("DATABASE_URL не задано в середовищі");
+  }
+  return value;
+};
+
+export const getRedisUrl = (): string => process.env.REDIS_URL ?? "redis://localhost:6379";
+
+export const isProduction = (): boolean => process.env.NODE_ENV === "production";

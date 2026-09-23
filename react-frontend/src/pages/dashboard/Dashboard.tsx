@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuthStore } from "../../store/useAuthStore";
+import { authApi } from "../../api/auth";
 import { formsApi } from "../../api/forms";
 import FormCard from "./components/FormCard";
 
@@ -40,6 +41,11 @@ export default function Dashboard() {
   });
 
   const handleLogout = () => {
+    // Раніше /auth/logout був no-op, тому клієнт лише чистив локальний
+    // стан. Тепер сервер реально відкликає refresh-токен у БД - викликаємо
+    // його, але не чекаємо й не блокуємо вихід, якщо запит не вдався
+    // (напр. мережа відпала): локальний logout все одно має спрацювати.
+    authApi.logout().catch(() => {});
     clearAuth();
     navigate("/login");
   };

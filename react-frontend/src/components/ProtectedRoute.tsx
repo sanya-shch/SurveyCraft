@@ -20,7 +20,12 @@ export default function ProtectedRoute({ children }: ProtectedRouteProps) {
     queryFn: async () => {
       try {
         const userData = await authApi.getMe();
-        setAuth(userData, token!);
+        // Навмисно НЕ використовуємо `token` із замикання: якщо access-токен
+        // протух, axios-інтерцептор (api/axios.ts) міг непомітно обміняти
+        // його на новий ПІД ЧАС цього запиту - беремо актуальне значення
+        // напряму зі стору, інакше тут знову збережеться вже недійсний
+        // старий токен.
+        setAuth(userData, useAuthStore.getState().token!);
         return userData;
       } catch (error) {
         clearAuth();

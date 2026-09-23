@@ -1,11 +1,25 @@
 import { z } from 'zod';
 
+/**
+ * Політика складності пароля застосовується лише при РЕЄСТРАЦІЇ. Раніше
+ * той самий min(6) стояв і на логіні - тобто якщо політику колись
+ * посилити, існуючі користувачі зі старими паролями миттєво втратили б
+ * змогу залогінитись, хоча пароль ніхто не міняв. Логін нижче лише
+ * перевіряє, що пароль взагалі передано.
+ */
+const registerPasswordSchema = z
+  .string()
+  .min(8, 'Пароль має містити щонайменше 8 символів')
+  .regex(/[a-z]/, 'Пароль має містити хоча б одну малу літеру')
+  .regex(/[A-Z]/, 'Пароль має містити хоча б одну велику літеру')
+  .regex(/[0-9]/, 'Пароль має містити хоча б одну цифру');
+
 export const registerSchema = z.object({
   email: z.string().email(),
-  password: z.string().min(6),
+  password: registerPasswordSchema,
 });
 
 export const loginSchema = z.object({
   email: z.string().email(),
-  password: z.string().min(6),
+  password: z.string().min(1, "Пароль обов'язковий"),
 });

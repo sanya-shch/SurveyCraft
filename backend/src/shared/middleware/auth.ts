@@ -1,12 +1,8 @@
-import jwt from 'jsonwebtoken';
 import { AppError } from './errorHandler.js';
 import { Response, NextFunction, Request } from 'express';
+import { verifyAccessToken } from '../utils/jwt.js';
 
 export type AuthLocals = {
-  userId: string;
-};
-
-type JwtPayload = {
   userId: string;
 };
 
@@ -17,14 +13,14 @@ export const authMiddleware = (
 ) => {
   const header = req.headers.authorization;
 
-  if (!header) {
+  if (!header?.startsWith('Bearer ')) {
     throw new AppError('Unauthorized', 401);
   }
 
-  const token = header.split(' ')[1];
+  const token = header.slice('Bearer '.length);
 
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET!) as JwtPayload;
+    const decoded = verifyAccessToken(token);
 
     res.locals.userId = decoded.userId;
 
