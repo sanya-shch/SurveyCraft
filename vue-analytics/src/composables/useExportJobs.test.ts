@@ -31,7 +31,7 @@ const job = (overrides: Partial<Pick<ExportJobDto, "id" | "status">> = {}): Expo
 describe("getExportErrorMessage (чиста функція, без async/mock)", () => {
   it("ApiError -> повідомлення про список експортів", () => {
     expect(getExportErrorMessage(new ApiError(500, "x"))).toBe(
-      "Не вдалося завантажити список експортів",
+      "analytics.errors.exportListLoadFailed",
     );
   });
 });

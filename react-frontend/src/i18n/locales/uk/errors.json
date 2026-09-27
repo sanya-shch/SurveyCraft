@@ -1,0 +1,44 @@
+{
+  "AUTH_EMAIL_ALREADY_IN_USE": "Ця електронна пошта вже зареєстрована",
+  "AUTH_INVALID_CREDENTIALS": "Невірний email або пароль",
+  "AUTH_REFRESH_TOKEN_MISSING": "Сесія закінчилась, увійдіть знову",
+  "AUTH_REFRESH_TOKEN_INVALID": "Сесія закінчилась, увійдіть знову",
+  "AUTH_UNAUTHORIZED": "Потрібно увійти в акаунт",
+  "AUTH_TOKEN_INVALID": "Сесія закінчилась, увійдіть знову",
+  "AUTH_USER_NOT_FOUND": "Користувача не знайдено",
+
+  "FORM_NOT_FOUND": "Форму не знайдено",
+  "FORM_FORBIDDEN": "У вас немає доступу до цієї форми",
+  "FORM_NOT_AVAILABLE": "Ця форма недоступна",
+  "FORM_NOT_PUBLISHED": "Ця форма ще не опублікована",
+  "FORM_INVALID_CONDITIONS": "Некоректні умови показу питань",
+
+  "EXPORT_JOB_NOT_FOUND": "Завдання експорту не знайдено",
+  "EXPORT_NOT_READY": "Експорт ще не готовий",
+  "EXPORT_FILE_MISSING": "Файл експорту відсутній на сервері",
+
+  "RESPONSE_VALIDATION_FAILED": "Перевірте правильність заповнення форми",
+
+  "ANALYTICS_QUESTION_NOT_FOUND": "Питання не знайдено",
+  "ANALYTICS_UNSUPPORTED_TYPE": "Цей тип питання не підтримується",
+  "ANALYTICS_RESPONSE_NOT_FOUND": "Відповідь не знайдено",
+
+  "VALIDATION_EMAIL_REQUIRED": "Email є обов'язковим",
+  "VALIDATION_EMAIL_INVALID": "Некоректний формат email",
+  "VALIDATION_PASSWORD_REQUIRED": "Пароль є обов'язковим",
+  "VALIDATION_PASSWORD_TOO_SHORT": "Пароль має містити щонайменше 8 символів",
+  "VALIDATION_PASSWORD_NO_LOWERCASE": "Пароль має містити хоча б одну малу літеру",
+  "VALIDATION_PASSWORD_NO_UPPERCASE": "Пароль має містити хоча б одну велику літеру",
+  "VALIDATION_PASSWORD_NO_DIGIT": "Пароль має містити хоча б одну цифру",
+  "VALIDATION_CONFIRM_PASSWORD_REQUIRED": "Підтвердження пароля є обов'язковим",
+  "VALIDATION_PASSWORDS_DO_NOT_MATCH": "Паролі не співпадають",
+
+  "VALIDATION_FIELD_REQUIRED": "Це поле обов'язкове",
+  "VALIDATION_FORMAT_INVALID": "Некоректний формат",
+  "VALIDATION_DATE_INVALID": "Некоректна дата",
+  "VALIDATION_MUST_BE_ACCEPTED": "Це поле потрібно підтвердити",
+
+  "RATE_LIMITED": "Забагато спроб. Спробуйте пізніше",
+  "INTERNAL_SERVER_ERROR": "Щось пішло не так. Спробуйте ще раз",
+  "UNKNOWN": "Сталася невідома помилка"
+}

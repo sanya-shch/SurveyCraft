@@ -35,7 +35,7 @@ describe("QuestionStepper - покрокова навігація з умовн�
 
     await user.click(screen.getByRole("button", { name: "Далі →" }));
 
-    expect(await screen.findByRole("alert")).toHaveTextContent("обов'язковим");
+    expect(await screen.findByRole("alert")).toHaveTextContent("обов'язков");
     expect(screen.getByText("Обов'язкове")).toBeInTheDocument(); // все ще на першому кроці
   });
 

@@ -1,0 +1,35 @@
+{
+  "loading": "Завантаження опитування...",
+  "accessError": {
+    "title": "Помилка доступу",
+    "fallback": "Форму не знайдено або доступ обмежено"
+  },
+  "thankYou": {
+    "title": "Дякуємо!",
+    "subtitle": "Ваші відповіді успішно збережено. Опитування завершено."
+  },
+  "questionFallback": "Питання №{{number}}",
+  "requiredQuestionAriaLabel": "обов'язкове питання",
+  "textareaPlaceholder": "Введіть розгорнуту відповідь...",
+  "textInputPlaceholder": "Введіть відповідь...",
+  "submit": "Надіслати відповіді",
+  "noQuestions": "У цьому опитуванні поки немає питань.",
+  "stepper": {
+    "reviewLabel": "Перевірка відповідей",
+    "questionLabel": "Питання {{number}}",
+    "reviewTitle": "Готово, перевірте відповіді",
+    "changeAnswer": "Змінити",
+    "back": "← Назад",
+    "next": "Далі →",
+    "reviewErrorsHint": "Перевірте виділені питання - у деяких відповідях є помилки.",
+    "booleanYes": "Так",
+    "booleanNo": "Ні"
+  },
+  "validation": {
+    "numberMin": "Значення має бути не менше {{min}}",
+    "numberMax": "Значення має бути не більше {{max}}",
+    "textMinLength": "Мінімальна кількість символів: {{minLength}}",
+    "textMaxLength": "Максимальна кількість символів: {{maxLength}}",
+    "nameInvalid": "Ім'я може містити лише літери, пробіли або дефіси"
+  }
+}

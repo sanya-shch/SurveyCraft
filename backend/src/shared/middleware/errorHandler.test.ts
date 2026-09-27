@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
+import { ErrorCode } from "@surveycraft/shared-types";
 import { AppError, errorHandler } from "./errorHandler.js";
 
 const makeRes = () => {
@@ -56,7 +57,7 @@ describe("errorHandler", () => {
     errorHandler(internalError, {} as any, res, vi.fn());
 
     expect(res.status).toHaveBeenCalledWith(500);
-    expect(res.json).toHaveBeenCalledWith({ message: "Internal Server Error" });
+    expect(res.json).toHaveBeenCalledWith({ message: ErrorCode.INTERNAL_SERVER_ERROR });
     expect(consoleSpy).toHaveBeenCalledWith(internalError);
 
     consoleSpy.mockRestore();

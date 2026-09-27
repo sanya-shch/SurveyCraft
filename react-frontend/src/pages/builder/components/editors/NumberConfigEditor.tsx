@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { ErrorInfo } from "../../../../components/ui/ErrorInfo";
 import { type QuestionConfig } from "../../../../types/formBuilder";
 
@@ -7,6 +8,7 @@ interface NumberConfigEditorProps {
 }
 
 export default function NumberConfigEditor({ config, onChange }: NumberConfigEditorProps) {
+  const { t } = useTranslation();
   const currentConfig = config || {};
   const minValue = currentConfig.min;
   const maxValue = currentConfig.max;
@@ -34,11 +36,13 @@ export default function NumberConfigEditor({ config, onChange }: NumberConfigEdi
     <div className="flex flex-col gap-3 animate-in fade-in duration-150">
       <div className="flex gap-4">
         <div className="w-32 flex flex-col gap-1.5">
-          <label className="text-xs font-semibold text-slate-500">Мінімальне число</label>
+          <label className="text-xs font-semibold text-slate-500">
+            {t("builder.editors.number.min")}
+          </label>
           <input
             type="number"
             min={0}
-            placeholder="Без ліміту"
+            placeholder={t("builder.editors.number.noLimit")}
             value={minValue ?? ""}
             onChange={(e) => handleNumberChange(e.target.value, "min")}
             className={`h-10 rounded-xl border px-3 text-sm font-medium text-slate-700 focus:outline-none transition-colors ${
@@ -50,11 +54,13 @@ export default function NumberConfigEditor({ config, onChange }: NumberConfigEdi
         </div>
 
         <div className="w-32 flex flex-col gap-1.5">
-          <label className="text-xs font-semibold text-slate-500">Максимальне число</label>
+          <label className="text-xs font-semibold text-slate-500">
+            {t("builder.editors.number.max")}
+          </label>
           <input
             type="number"
             min={0}
-            placeholder="Без ліміту"
+            placeholder={t("builder.editors.number.noLimit")}
             value={maxValue ?? ""}
             onChange={(e) => handleNumberChange(e.target.value, "max")}
             className={`h-10 rounded-xl border px-3 text-sm font-medium text-slate-700 focus:outline-none transition-colors ${
@@ -66,9 +72,7 @@ export default function NumberConfigEditor({ config, onChange }: NumberConfigEdi
         </div>
       </div>
 
-      {hasValidationError && (
-        <ErrorInfo errorText="Мінімальне значення не може бути більшим за максимальне" />
-      )}
+      {hasValidationError && <ErrorInfo errorText={t("builder.editors.number.minMaxError")} />}
     </div>
   );
 }

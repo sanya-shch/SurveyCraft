@@ -1,5 +1,6 @@
 import { prisma } from "../../prisma/prisma.js";
 import { AppError } from "../../shared/middleware/errorHandler.js";
+import { ErrorCode } from "@surveycraft/shared-types";
 import { Answers } from "../response/response.types.js";
 import {
   EnrichedAnswer,
@@ -57,8 +58,8 @@ export const getFormAnalytics = async (
     include: { questions: true },
   });
 
-  if (!form) throw new AppError("Form not found", 404);
-  if (form.userId !== userId) throw new AppError("Forbidden", 403);
+  if (!form) throw new AppError(ErrorCode.FORM_NOT_FOUND, 404);
+  if (form.userId !== userId) throw new AppError(ErrorCode.FORM_FORBIDDEN, 403);
 
   const responses = await prisma.response.findMany({
     where: { formId },
@@ -247,8 +248,8 @@ export const getFormPaths = async (formId: string, userId: string): Promise<Form
     include: { questions: true },
   });
 
-  if (!form) throw new AppError("Form not found", 404);
-  if (form.userId !== userId) throw new AppError("Forbidden", 403);
+  if (!form) throw new AppError(ErrorCode.FORM_NOT_FOUND, 404);
+  if (form.userId !== userId) throw new AppError(ErrorCode.FORM_FORBIDDEN, 403);
 
   const responses = await prisma.response.findMany({
     where: { formId },
@@ -308,8 +309,8 @@ export const getFormFunnel = async (formId: string, userId: string): Promise<For
     include: { questions: true },
   });
 
-  if (!form) throw new AppError("Form not found", 404);
-  if (form.userId !== userId) throw new AppError("Forbidden", 403);
+  if (!form) throw new AppError(ErrorCode.FORM_NOT_FOUND, 404);
+  if (form.userId !== userId) throw new AppError(ErrorCode.FORM_FORBIDDEN, 403);
 
   const attempts = await prisma.responseAttempt.findMany({
     where: { formId },
@@ -331,12 +332,12 @@ export const getQuestionAnalytics = async (
     include: { questions: true },
   });
 
-  if (!form) throw new AppError("Form not found", 404);
-  if (form.userId !== userId) throw new AppError("Forbidden", 403);
+  if (!form) throw new AppError(ErrorCode.FORM_NOT_FOUND, 404);
+  if (form.userId !== userId) throw new AppError(ErrorCode.FORM_FORBIDDEN, 403);
 
   const question = form.questions.find((q) => q.id === questionId);
 
-  if (!question) throw new AppError("Question not found", 404);
+  if (!question) throw new AppError(ErrorCode.ANALYTICS_QUESTION_NOT_FOUND, 404);
 
   const responses = await prisma.response.findMany({
     where: { formId },
@@ -448,7 +449,7 @@ export const getQuestionAnalytics = async (
     };
   }
 
-  throw new AppError("Unsupported type", 400);
+  throw new AppError(ErrorCode.ANALYTICS_UNSUPPORTED_TYPE, 400);
 };
 
 export const getResponses = async (
@@ -461,8 +462,8 @@ export const getResponses = async (
     where: { id: formId },
   });
 
-  if (!form) throw new AppError("Form not found", 404);
-  if (form.userId !== userId) throw new AppError("Forbidden", 403);
+  if (!form) throw new AppError(ErrorCode.FORM_NOT_FOUND, 404);
+  if (form.userId !== userId) throw new AppError(ErrorCode.FORM_FORBIDDEN, 403);
 
   const skip = (page - 1) * limit;
 
@@ -501,15 +502,15 @@ export const getResponseById = async (
     include: { questions: true },
   });
 
-  if (!form) throw new AppError("Form not found", 404);
-  if (form.userId !== userId) throw new AppError("Forbidden", 403);
+  if (!form) throw new AppError(ErrorCode.FORM_NOT_FOUND, 404);
+  if (form.userId !== userId) throw new AppError(ErrorCode.FORM_FORBIDDEN, 403);
 
   const response = await prisma.response.findUnique({
     where: { id: responseId },
   });
 
   if (!response || response.formId !== formId) {
-    throw new AppError("Response not found", 404);
+    throw new AppError(ErrorCode.ANALYTICS_RESPONSE_NOT_FOUND, 404);
   }
 
   const rawAnswers = response.answers as Record<string, any>;

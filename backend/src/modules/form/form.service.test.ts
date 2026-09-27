@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { ErrorCode } from "@surveycraft/shared-types";
 
 vi.mock("../../prisma/prisma.js", () => ({
   prisma: {
@@ -131,7 +132,7 @@ describe("getFormByShareId", () => {
 
     await expect(getFormByShareId("share-1")).rejects.toMatchObject({
       statusCode: 404,
-      message: "Form not available",
+      message: ErrorCode.FORM_NOT_AVAILABLE,
     });
   });
 

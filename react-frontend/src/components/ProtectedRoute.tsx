@@ -1,6 +1,7 @@
 import React from "react";
 import { Navigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 import { authApi } from "../api/auth";
 import { useAuthStore } from "../store/useAuthStore";
 
@@ -10,6 +11,7 @@ interface ProtectedRouteProps {
 
 export default function ProtectedRoute({ children }: ProtectedRouteProps) {
   const { token, isAuthenticated, setAuth, clearAuth } = useAuthStore();
+  const { t } = useTranslation();
 
   const {
     data: user,
@@ -46,7 +48,7 @@ export default function ProtectedRoute({ children }: ProtectedRouteProps) {
       <div className="flex h-screen items-center justify-center bg-slate-50">
         <div className="flex flex-col items-center gap-2">
           <div className="h-8 w-8 animate-spin rounded-full border-4 border-slate-200 border-t-indigo-600" />
-          <span className="text-sm font-medium text-slate-500">Перевірка доступу...</span>
+          <span className="text-sm font-medium text-slate-500">{t("common.checkingAccess")}</span>
         </div>
       </div>
     );

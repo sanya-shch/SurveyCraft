@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { type FormSummary } from "../../../types/form";
 import FormCardMenu from "./FormCardMenu";
 
@@ -18,6 +19,8 @@ export default function FormCard({
   onDuplicate,
   onAnalytics,
 }: FormCardProps) {
+  const { t, i18n } = useTranslation();
+
   const handleCopyLink = () => {
     const publicUrl = `${window.location.origin}/public/forms/${form.shareId}`;
     navigator.clipboard.writeText(publicUrl);
@@ -37,12 +40,12 @@ export default function FormCard({
                 : "bg-amber-50 text-amber-700 ring-amber-600/10"
             }`}
           >
-            {form.isPublished ? "Опубліковано" : "Чернетка"}
+            {form.isPublished ? t("dashboard.card.published") : t("dashboard.card.draft")}
           </span>
 
           <div className="flex items-center gap-2">
             <span className="text-xs text-slate-400">
-              {new Date(form.updatedAt).toLocaleDateString("uk-UA")}
+              {new Date(form.updatedAt).toLocaleDateString(i18n.language)}
             </span>
 
             <FormCardMenu
@@ -60,7 +63,7 @@ export default function FormCard({
           {form.title}
         </h3>
         <p className="mt-1.5 text-sm text-slate-400 line-clamp-2">
-          {form.description || "Без опису"}
+          {form.description || t("dashboard.card.noDescription")}
         </p>
       </div>
 
@@ -79,9 +82,7 @@ export default function FormCard({
               d="M7.5 8.25h9m-9 3H12m-9.75 1.51c0 1.6 1.123 2.994 2.707 3.227 1.129.166 2.27.293 3.423.379.35.026.67.21.865.501L12 21l2.755-4.133a1.14 1.14 0 0 1 .865-.501c1.153-.086 2.294-.213 3.423-.379 1.584-.233 2.707-1.626 2.707-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0 0 12 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018Z"
             />
           </svg>
-          {/* Кількість відповідей, якщо у твоїй Prisma схемі це масив, бек зазвичай повертає responses.length */}
-          <span className="font-medium text-slate-700">{form._count?.responses ?? 0}</span>{" "}
-          відповідей
+          <span>{t("dashboard.card.responsesCount", { count: form._count?.responses ?? 0 })}</span>
         </div>
 
         <span className="text-slate-400 group-hover:translate-x-1 group-hover:text-indigo-500 transition-transform">

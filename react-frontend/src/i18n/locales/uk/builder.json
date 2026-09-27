@@ -1,0 +1,116 @@
+{
+  "backToDashboard": "До дашборду",
+  "unsavedChanges": "Є незбережені зміни",
+  "allSaved": "Усі зміни збережено",
+  "saving": "Збереження...",
+  "saveForm": "Зберегти форму",
+  "saveSuccess": "Форму успішно збережено!",
+  "saveError": "Помилка при збереженні форми.",
+  "titlePlaceholder": "Назва опитування",
+  "descriptionPlaceholder": "Додайте опис опитування...",
+  "responseMode": {
+    "label": "Режим проходження",
+    "hint": "Як респондент відповідатиме на питання",
+    "allAtOnce": "Усі питання",
+    "stepByStep": "По одному"
+  },
+  "emptyState": "Перетягніть елемент із сайдбару або скористайтеся кнопками додавання, щоб створити перше питання.",
+  "leaveModal": {
+    "title": "У вас є незбережені зміни",
+    "description": "Ви дійсно хочете вийти?",
+    "confirm": "Вийти без збереження",
+    "cancel": "Залишитися"
+  },
+  "booleanPreview": {
+    "label": "Прев'ю перемикача:",
+    "on": "Увімкнено",
+    "off": "Вимкнено"
+  },
+  "datePreview": "Поле вибору календарної дати (ДД.ММ.РРРР)",
+  "dropdownPlaceholder": "Оберіть варіант зі списку...",
+  "emptyOption": "Порожній варіант...",
+  "inlineAdd": {
+    "addHere": "Додати питання сюди",
+    "questionTypes": "Типи питань"
+  },
+  "questionCard": {
+    "dragHandle": "Перетягнути питання",
+    "textPlaceholder": "Запитання без назви",
+    "textAriaLabel": "Текст питання",
+    "descriptionPlaceholder": "Додати опис (необов'язково)...",
+    "descriptionAriaLabel": "Опис питання (необов'язково)",
+    "configPlaceholder": "Конфігурація для типу {{type}} буде тут...",
+    "toggleBadge": "Перемикач",
+    "duplicate": "Дублювати питання",
+    "delete": "Видалити питання"
+  },
+  "questionTypes": {
+    "TEXT": "Текстове поле",
+    "NUMBER": "Числове поле",
+    "CHOICE_SINGLE": "Один вибір",
+    "CHOICE_MULTI": "Кілька виборів",
+    "BOOLEAN": "Так / Ні",
+    "DATE": "Вибір дати"
+  },
+  "editors": {
+    "text": {
+      "variantLabel": "Варіант поля (Variant)",
+      "variantInput": "Рядок тексту (Input)",
+      "variantTextarea": "Багаторядковий текст (Textarea)",
+      "variantEmail": "Електронна пошта (Email)",
+      "variantName": "Ім'я користувача",
+      "minLength": "Мін. симв.",
+      "maxLength": "Макс. симв.",
+      "minMaxError": "Мінімальна кількість символів не може бути більшим за максимальне"
+    },
+    "number": {
+      "min": "Мінімальне число",
+      "max": "Максимальне число",
+      "noLimit": "Без ліміту",
+      "minMaxError": "Мінімальне значення не може бути більшим за максимальне"
+    },
+    "boolean": {
+      "defaultValueLabel": "Значення за замовчуванням (Default Value)",
+      "off": "❌ Вимкнено (False)",
+      "on": "✅ Увімкнено (True)",
+      "hint": "💡 Респондент побачить це поле у вказаному стані при відкритті форми."
+    },
+    "options": {
+      "newOptionText": "Варіант {{number}}",
+      "label": "Варіанти відповідей та значення за замовчуванням",
+      "removeDefaultTitle": "Прибрати вибір за замовчуванням",
+      "setDefaultTitle": "Зробити дефолтним",
+      "textPlaceholder": "Введіть варіант...",
+      "addOption": "Додати варіант",
+      "displayStyleLabel": "Стиль відображення респонденту",
+      "displayList": "Список",
+      "displayTabs": "Таби",
+      "displayDropdown": "Дропдаун",
+      "dropdownDisabledHint": "Дропдаун доступний тільки для питань з одним варіантом відповіді"
+    },
+    "condition": {
+      "enableLabel": "Показувати лише за умовою (conditional logic)",
+      "noTargetsHint": "Умову показу можна додати лише для питань, перед якими є інші питання.",
+      "executeLabel": "Виконати:",
+      "logicAll": "УСІ умови",
+      "logicAny": "БУДЬ-ЯКА з умов",
+      "ifWord": "Якщо",
+      "andWord": "і",
+      "untitledQuestion": "Без назви",
+      "removeRule": "Прибрати цю умову",
+      "addRule": "+ Додати умову",
+      "chooseOption": "Оберіть варіант...",
+      "valuePlaceholder": "Значення...",
+      "booleanNo": "Ні",
+      "booleanYes": "Так",
+      "operators": {
+        "equals": "дорівнює",
+        "notEquals": "не дорівнює",
+        "contains": "містить",
+        "in": "є одним із",
+        "gt": "більше ніж",
+        "lt": "менше ніж"
+      }
+    }
+  }
+}

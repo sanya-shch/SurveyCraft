@@ -3,7 +3,9 @@ import type { QuestionAnalyticsDto } from "@surveycraft/shared-types";
 import { apiGet, ApiError } from "../api/client";
 
 export const getQuestionErrorMessage = (e: unknown): string =>
-  e instanceof ApiError ? "Не вдалося завантажити деталі питання" : "Помилка мережі";
+  e instanceof ApiError
+    ? "analytics.errors.questionDetailsLoadFailed"
+    : "analytics.errors.networkError";
 
 export function useQuestionAnalytics(apiBaseUrl: string, formId: string) {
   const data = shallowRef<QuestionAnalyticsDto | null>(null);

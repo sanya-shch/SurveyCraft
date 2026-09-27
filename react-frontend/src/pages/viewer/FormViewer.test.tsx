@@ -99,7 +99,7 @@ describe("FormViewer - умовна видимість (інтеграційни
 
     await user.click(screen.getByRole("button", { name: "Надіслати відповіді" }));
 
-    expect(await screen.findByRole("alert")).toHaveTextContent("обов'язковим");
+    expect(await screen.findByRole("alert")).toHaveTextContent("обов'язков");
     expect(onSubmit).not.toHaveBeenCalled();
   });
 

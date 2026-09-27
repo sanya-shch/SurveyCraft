@@ -2,14 +2,18 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
 import { useNavigate, Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { registerSchema, type RegisterInput, authApi } from "../../api/auth";
 import { useAuthStore } from "../../store/useAuthStore";
 import { Input } from "../../components/ui/Input";
+import { LanguageSwitcher } from "../../components/ui/LanguageSwitcher";
 import { AxiosError } from "axios";
+import { getApiErrorMessage, translateErrorCode } from "../../i18n/errorCodes";
 
 export default function Register() {
   const navigate = useNavigate();
   const setAuth = useAuthStore((state) => state.setAuth);
+  const { t } = useTranslation();
 
   const {
     register,
@@ -27,8 +31,7 @@ export default function Register() {
       navigate("/dashboard");
     },
     onError: (error: AxiosError<{ message?: string }>) => {
-      const serverMessage = error.response?.data?.message || "Помилка при реєстрації";
-      setError("root", { message: serverMessage });
+      setError("root", { message: getApiErrorMessage(t, error) });
     },
   });
 
@@ -40,18 +43,21 @@ export default function Register() {
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-slate-50 px-4 py-12 sm:px-6 lg:px-8">
+      <div className="absolute top-4 right-4">
+        <LanguageSwitcher />
+      </div>
       <div className="w-full max-w-md space-y-8 bg-white p-8 rounded-2xl border border-slate-200 shadow-xs">
         <div>
           <h2 className="text-center text-3xl font-bold tracking-tight text-slate-900">
-            Реєстрація
+            {t("auth.register.title")}
           </h2>
           <p className="mt-2 text-center text-sm text-slate-600">
-            Вже маєте акаунт?{" "}
+            {t("auth.register.haveAccountText")}{" "}
             <Link
               to="/login"
               className="font-medium text-indigo-600 hover:text-indigo-500 transition-colors"
             >
-              Увійдіть
+              {t("auth.register.loginLink")}
             </Link>
           </p>
         </div>
@@ -64,26 +70,32 @@ export default function Register() {
           )}
 
           <Input
-            label="Email адреса"
+            label={t("auth.register.emailLabel")}
             type="email"
             placeholder="you@example.com"
-            error={errors.email?.message}
+            error={errors.email?.message ? translateErrorCode(t, errors.email.message) : undefined}
             {...register("email")}
           />
 
           <Input
-            label="Пароль"
+            label={t("auth.register.passwordLabel")}
             type="password"
             placeholder="••••••••"
-            error={errors.password?.message}
+            error={
+              errors.password?.message ? translateErrorCode(t, errors.password.message) : undefined
+            }
             {...register("password")}
           />
 
           <Input
-            label="Підтвердження пароля"
+            label={t("auth.register.confirmPasswordLabel")}
             type="password"
             placeholder="••••••••"
-            error={errors.confirmPassword?.message}
+            error={
+              errors.confirmPassword?.message
+                ? translateErrorCode(t, errors.confirmPassword.message)
+                : undefined
+            }
             {...register("confirmPassword")}
           />
 
@@ -92,7 +104,7 @@ export default function Register() {
             disabled={registerMutation.isPending}
             className="w-full flex justify-center py-2.5 px-4 border border-transparent rounded-xl shadow-xs text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-hidden focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all disabled:opacity-50 cursor-pointer mt-6"
           >
-            {registerMutation.isPending ? "Реєстрація..." : "Створити акаунт"}
+            {registerMutation.isPending ? t("auth.register.submitting") : t("auth.register.submit")}
           </button>
         </form>
       </div>

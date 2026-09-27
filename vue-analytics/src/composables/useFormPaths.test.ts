@@ -12,14 +12,14 @@ const mockedApiGet = vi.mocked(apiGet);
 describe("getPathsErrorMessage (чиста функція, без async/mock)", () => {
   it("ApiError -> повідомлення про шляхи проходження", async () => {
     const { getPathsErrorMessage } = await import("./useFormPaths");
-    expect(getPathsErrorMessage(new ApiError(500, "x"))).toBe(
-      "Не вдалося завантажити шляхи проходження",
-    );
+    expect(getPathsErrorMessage(new ApiError(500, "x"))).toBe("analytics.errors.pathsLoadFailed");
   });
 
   it("не-ApiError -> 'Помилка мережі'", async () => {
     const { getPathsErrorMessage } = await import("./useFormPaths");
-    expect(getPathsErrorMessage(new TypeError("network down"))).toBe("Помилка мережі");
+    expect(getPathsErrorMessage(new TypeError("network down"))).toBe(
+      "analytics.errors.networkError",
+    );
   });
 });
 

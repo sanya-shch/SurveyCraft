@@ -1,4 +1,5 @@
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 
 interface AnalyticsHeaderProps {
   formId: string;
@@ -8,10 +9,12 @@ interface AnalyticsHeaderProps {
 
 export default function AnalyticsHeader({
   formId,
-  formTitle = "Опитування",
+  formTitle,
   currentBreadcrumb,
 }: AnalyticsHeaderProps) {
   const navigate = useNavigate();
+  const { t } = useTranslation();
+  const resolvedFormTitle = formTitle ?? t("analytics.header.defaultFormTitle");
 
   return (
     <header className="w-full bg-white border-b border-slate-200 sticky top-0 z-40 shadow-sm/50">
@@ -21,7 +24,7 @@ export default function AnalyticsHeader({
             onClick={() => navigate("/dashboard")}
             className="text-slate-400 hover:text-slate-600 transition-colors cursor-pointer"
           >
-            Дашборд
+            {t("analytics.header.dashboardLink")}
           </button>
 
           <svg
@@ -38,7 +41,7 @@ export default function AnalyticsHeader({
             onClick={() => navigate(`/analytics/${formId}`)}
             className={`transition-colors ${currentBreadcrumb ? "text-slate-400 hover:text-slate-600 cursor-pointer" : "text-slate-800"}`}
           >
-            {formTitle}
+            {resolvedFormTitle}
           </button>
 
           {currentBreadcrumb && (

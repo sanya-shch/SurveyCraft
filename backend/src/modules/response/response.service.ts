@@ -1,6 +1,7 @@
 import { prisma } from "../../prisma/prisma.js";
 import { buildResponseSchema } from "./response.validation.js";
 import { AppError } from "../../shared/middleware/errorHandler.js";
+import { ErrorCode } from "@surveycraft/shared-types";
 import { Answers } from "./response.types.js";
 import { resolveVisibleQuestionIds, type QuestionLike } from "@surveycraft/condition-engine";
 import { toJson } from "../../shared/utils/helpers.js";
@@ -14,11 +15,11 @@ export const submitResponse = async (shareId: string, answers: Answers, sessionK
   });
 
   if (!form) {
-    throw new AppError("Form not found", 404);
+    throw new AppError(ErrorCode.FORM_NOT_FOUND, 404);
   }
 
   if (!form.isPublished) {
-    throw new AppError("Form is not published", 400);
+    throw new AppError(ErrorCode.FORM_NOT_PUBLISHED, 400);
   }
 
   const visibleQuestionIds = resolveVisibleQuestionIds(
@@ -36,7 +37,7 @@ export const submitResponse = async (shareId: string, answers: Answers, sessionK
       message: err.message,
     }));
 
-    throw new AppError("Validation failed", 400, formattedErrors);
+    throw new AppError(ErrorCode.RESPONSE_VALIDATION_FAILED, 400, formattedErrors);
   }
 
   const cleanedAnswers = Object.fromEntries(

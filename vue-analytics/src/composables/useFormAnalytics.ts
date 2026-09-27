@@ -4,10 +4,10 @@ import { apiGet, ApiError } from "../api/client";
 
 export const getAnalyticsErrorMessage = (e: unknown): string => {
   if (e instanceof ApiError) {
-    if (e.status === 403) return "Немає доступу до аналітики цієї форми";
-    if (e.status === 404) return "Форму не знайдено";
+    if (e.status === 403) return "analytics.errors.accessDenied";
+    if (e.status === 404) return "analytics.errors.formNotFound";
   }
-  return "Не вдалося завантажити аналітику";
+  return "analytics.errors.loadFailed";
 };
 
 export function useFormAnalytics(apiBaseUrl: string, formId: string) {

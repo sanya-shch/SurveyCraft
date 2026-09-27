@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { type Question } from "../../types/formBuilder";
 import { type FormAnswers } from "../../types/formViewer";
 import { ErrorInfo } from "../../components/ui/ErrorInfo";
@@ -8,6 +9,7 @@ import {
   validateField,
   validateAll,
   buildCleanedAnswers,
+  type FieldValidationError,
 } from "./questionValidation";
 import { sortByOrder, getNextQuestion } from "./questionFlow";
 import { useAttemptAutosave } from "./hooks/useAttemptAutosave";
@@ -17,7 +19,7 @@ interface QuestionStepperProps {
   formDescription?: string;
   questions: Question[];
   onSubmit: (data: FormAnswers) => void;
-  serverErrors?: Record<string, string>;
+  serverErrors?: Record<string, FieldValidationError>;
   onClearServerError?: (fieldId: string) => void;
   shareId?: string;
   sessionKey?: string;
@@ -33,6 +35,7 @@ export default function QuestionStepper({
   shareId,
   sessionKey = "",
 }: QuestionStepperProps) {
+  const { t } = useTranslation();
   const orderedQuestions = useMemo(() => sortByOrder(questions), [questions]);
 
   const [answers, setAnswers] = useState<FormAnswers>(() => {
@@ -51,7 +54,7 @@ export default function QuestionStepper({
     return first ? [first] : [];
   });
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [localErrors, setLocalErrors] = useState<Record<string, string>>({});
+  const [localErrors, setLocalErrors] = useState<Record<string, FieldValidationError>>({});
 
   const stepHeadingRef = useRef<HTMLElement>(null);
 
@@ -123,7 +126,7 @@ export default function QuestionStepper({
   if (path.length === 0) {
     return (
       <div className="min-h-screen bg-slate-50 flex items-center justify-center px-4">
-        <p className="text-sm text-slate-400">У цьому опитуванні поки немає питань.</p>
+        <p className="text-sm text-slate-400">{t("viewer.noQuestions")}</p>
       </div>
     );
   }
@@ -133,7 +136,11 @@ export default function QuestionStepper({
       <div className="w-full max-w-xl space-y-4">
         <div className="flex items-center justify-between text-xs font-semibold text-slate-400">
           <span>{formTitle}</span>
-          <span>{isReview ? "Перевірка відповідей" : `Питання ${currentIndex + 1}`}</span>
+          <span>
+            {isReview
+              ? t("viewer.stepper.reviewLabel")
+              : t("viewer.stepper.questionLabel", { number: currentIndex + 1 })}
+          </span>
         </div>
 
         <div className="h-1.5 w-full rounded-full bg-slate-200 overflow-hidden">
@@ -157,7 +164,7 @@ export default function QuestionStepper({
                 tabIndex={-1}
                 className="text-xl font-bold text-slate-900 focus:outline-none"
               >
-                Готово, перевірте відповіді
+                {t("viewer.stepper.reviewTitle")}
               </h2>
               {formDescription && <p className="text-sm text-slate-500 mt-1">{formDescription}</p>}
             </div>
@@ -169,7 +176,7 @@ export default function QuestionStepper({
                   className="flex items-center justify-between text-sm border-b border-slate-100 pb-2 last:border-0"
                 >
                   <span className="text-xs text-slate-400 shrink-0">
-                    {q.text || `Питання №${i + 1}`}
+                    {q.text || t("viewer.questionFallback", { number: i + 1 })}
                     {" - "}
                     {answers[q.id!].toString()}
                   </span>
@@ -179,7 +186,7 @@ export default function QuestionStepper({
                     onClick={() => setCurrentIndex(i)}
                     className="text-left text-slate-600 hover:text-indigo-600 transition-colors cursor-pointer truncate pr-4"
                   >
-                    <span className="text-xs shrink-0">Змінити</span>
+                    <span className="text-xs shrink-0">{t("viewer.stepper.changeAnswer")}</span>
                   </button>
                 </li>
               ))}
@@ -191,14 +198,14 @@ export default function QuestionStepper({
                 onClick={handleBack}
                 className="inline-flex h-11 items-center rounded-xl px-5 text-sm font-semibold text-slate-500 hover:bg-slate-100 transition-colors cursor-pointer"
               >
-                ← Назад
+                {t("viewer.stepper.back")}
               </button>
               <button
                 type="button"
                 onClick={handleFinalSubmit}
                 className="inline-flex h-11 items-center rounded-xl bg-indigo-600 px-6 text-sm font-semibold text-white hover:bg-indigo-500 shadow-sm transition-colors cursor-pointer"
               >
-                Надіслати відповіді
+                {t("viewer.submit")}
               </button>
             </div>
           </div>
@@ -220,9 +227,12 @@ export default function QuestionStepper({
                   htmlFor={current.id || `q-${currentIndex}`}
                   className="text-lg font-bold text-slate-800 flex items-center gap-1"
                 >
-                  {current.text || `Питання №${currentIndex + 1}`}
+                  {current.text || t("viewer.questionFallback", { number: currentIndex + 1 })}
                   {current.required && (
-                    <span className="text-rose-500" aria-label="обов'язкове питання">
+                    <span
+                      className="text-rose-500"
+                      aria-label={t("viewer.requiredQuestionAriaLabel")}
+                    >
                       *
                     </span>
                   )}
@@ -248,7 +258,12 @@ export default function QuestionStepper({
 
               {combinedErrors[current.id || `q-${currentIndex}`] && (
                 <div id={`${current.id || currentIndex}-error`}>
-                  <ErrorInfo errorText={combinedErrors[current.id || `q-${currentIndex}`]} />
+                  <ErrorInfo
+                    errorText={t(
+                      combinedErrors[current.id || `q-${currentIndex}`].key,
+                      combinedErrors[current.id || `q-${currentIndex}`].params,
+                    )}
+                  />
                 </div>
               )}
 
@@ -259,14 +274,14 @@ export default function QuestionStepper({
                   disabled={currentIndex === 0}
                   className="inline-flex h-11 items-center rounded-xl px-5 text-sm font-semibold text-slate-500 hover:bg-slate-100 disabled:opacity-0 disabled:pointer-events-none transition-colors cursor-pointer"
                 >
-                  ← Назад
+                  {t("viewer.stepper.back")}
                 </button>
                 <button
                   type="button"
                   onClick={handleNext}
                   className="inline-flex h-11 items-center rounded-xl bg-indigo-600 px-6 text-sm font-semibold text-white hover:bg-indigo-500 shadow-sm transition-colors cursor-pointer"
                 >
-                  Далі →
+                  {t("viewer.stepper.next")}
                 </button>
               </div>
             </div>
@@ -275,7 +290,7 @@ export default function QuestionStepper({
 
         {isSubmitAttempted && Object.keys(localErrors).length > 0 && isReview && (
           <p className="text-xs text-rose-600 text-center">
-            Перевірте виділені питання - у деяких відповідях є помилки.
+            {t("viewer.stepper.reviewErrorsHint")}
           </p>
         )}
       </div>

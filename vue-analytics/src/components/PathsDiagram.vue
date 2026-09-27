@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed } from "vue";
+import { useI18n } from "vue-i18n";
 import type { QuestionPathEdge, QuestionPathNode } from "@surveycraft/shared-types";
 
 const props = defineProps<{
@@ -7,6 +8,8 @@ const props = defineProps<{
   edges: QuestionPathEdge[];
   totalResponses: number;
 }>();
+
+const { t } = useI18n();
 
 const WIDTH = 640;
 const NODE_W = 420;
@@ -28,7 +31,7 @@ const nodeBoxes = computed(() =>
     y: rowY(i),
     width: NODE_W,
     height: NODE_H,
-    text: n.text || "Питання без назви",
+    text: n.text || t("analytics.common.untitledQuestion"),
     shownCount: n.shownCount,
     percent: props.totalResponses > 0 ? Math.round((n.shownCount / props.totalResponses) * 100) : 0,
   })),
@@ -82,7 +85,7 @@ const svgHeight = computed(() => MARGIN_TOP + (props.nodes.length + 1) * ROW_H -
   <div class="paths-wrap">
     <svg :viewBox="`0 0 ${WIDTH} ${svgHeight}`" :width="WIDTH" class="paths-svg">
       <text :x="CENTER_X" :y="MARGIN_TOP - 16" text-anchor="middle" class="start-label">
-        Старт ({{ totalResponses }})
+        {{ t("analytics.paths.start", { count: totalResponses }) }}
       </text>
 
       <path
@@ -112,13 +115,13 @@ const svgHeight = computed(() => MARGIN_TOP + (props.nodes.length + 1) * ROW_H -
           {{ box.text.length > 46 ? box.text.slice(0, 46) + "…" : box.text }}
         </text>
         <text :x="box.x + 16" :y="box.y + box.height / 2 + 14" class="node-meta">
-          {{ box.shownCount }} з {{ totalResponses }} ({{ box.percent }}%)
+          {{ t("analytics.paths.ofTotal", { count: box.shownCount, total: totalResponses, percent: box.percent }) }}
         </text>
       </g>
     </svg>
 
     <p v-if="edgePaths.some((e) => e.isSkip)" class="hint">
-      Вигнуті лінії — гілки, де проміжне питання було приховане умовою (перехід минає його напряму).
+      {{ t("analytics.paths.hint") }}
     </p>
   </div>
 </template>

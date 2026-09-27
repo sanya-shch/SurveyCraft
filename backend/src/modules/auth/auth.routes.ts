@@ -1,10 +1,11 @@
-import { Router } from 'express';
-import rateLimit from 'express-rate-limit';
-import { getMeHandler, login, logout, refresh, register } from './auth.controller.js';
-import { authMiddleware } from '../../shared/middleware/auth.js';
-import { validate } from '../../shared/middleware/validate.js';
-import { loginSchema, registerSchema } from './auth.schema.js';
-import { asyncHandler } from '../../shared/utils/asyncHandler.js';
+import { Router } from "express";
+import rateLimit from "express-rate-limit";
+import { getMeHandler, login, logout, refresh, register } from "./auth.controller.js";
+import { authMiddleware } from "../../shared/middleware/auth.js";
+import { validate } from "../../shared/middleware/validate.js";
+import { loginSchema, registerSchema } from "./auth.schema.js";
+import { asyncHandler } from "../../shared/utils/asyncHandler.js";
+import { ErrorCode } from "@surveycraft/shared-types";
 
 const router = Router();
 
@@ -18,13 +19,13 @@ const authRateLimiter = rateLimit({
   limit: 10,
   standardHeaders: true,
   legacyHeaders: false,
-  message: { message: 'Забагато спроб. Спробуйте пізніше.' },
+  message: { message: ErrorCode.RATE_LIMITED },
 });
 
-router.post('/register', authRateLimiter, validate(registerSchema), asyncHandler(register));
-router.post('/login', authRateLimiter, validate(loginSchema), asyncHandler(login));
-router.post('/refresh', asyncHandler(refresh));
-router.get('/me', authMiddleware, asyncHandler(getMeHandler));
-router.post('/logout', asyncHandler(logout));
+router.post("/register", authRateLimiter, validate(registerSchema), asyncHandler(register));
+router.post("/login", authRateLimiter, validate(loginSchema), asyncHandler(login));
+router.post("/refresh", asyncHandler(refresh));
+router.get("/me", authMiddleware, asyncHandler(getMeHandler));
+router.post("/logout", asyncHandler(logout));
 
 export default router;

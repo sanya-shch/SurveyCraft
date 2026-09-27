@@ -1,7 +1,11 @@
 import { Droppable, Draggable } from "@hello-pangea/dnd";
-import { SIDEBAR_ITEMS } from "../constants";
+import { useTranslation } from "react-i18next";
+import { getSidebarItems } from "../constants";
 
 export default function Sidebar() {
+  const { t } = useTranslation();
+  const SIDEBAR_ITEMS = getSidebarItems(t);
+
   return (
     <aside className="w-full md:w-64 shrink-0">
       <div className="sticky top-24">

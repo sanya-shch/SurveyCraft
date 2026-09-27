@@ -1,0 +1,25 @@
+{
+  "header": {
+    "dashboardLink": "Дашборд",
+    "defaultFormTitle": "Опитування"
+  },
+  "detail": {
+    "loadError": "Помилка завантаження детальної аналітики",
+    "goBack": "Повернутися назад",
+    "questionIdFallback": "Питання ID: {{id}}",
+    "typeLabel": "Тип: {{type}}",
+    "noDescription": "Питання без опису",
+    "responsesLabel": "Відповідей",
+    "allAnswers": "Усі відповіді:",
+    "avgValue": "Середнє значення",
+    "min": "Мінімум",
+    "max": "Максимум",
+    "distribution": "Розподіл за частотою:",
+    "numberLabel": "Число {{value}}:",
+    "optionsRanking": "Рейтинг вибору опцій:",
+    "optionIdSuffix": "(ID: {{id}})",
+    "options": "Опції:",
+    "booleanTrue": "Позитивна відповідь (Так / True)",
+    "booleanFalse": "Негативна відповідь (Ні / False)"
+  }
+}

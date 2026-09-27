@@ -3,6 +3,7 @@ const { Prisma } = await import("@prisma/client");
 
 const { prisma } = await import("../../prisma/prisma.js");
 const bcrypt = (await import("bcrypt")).default;
+const { ErrorCode } = await import("@surveycraft/shared-types");
 const { generateAccessToken, generateRefreshToken, hashRefreshToken } =
   await import("../../shared/utils/jwt.js");
 const { loginHandler, refreshAccessToken, registerUser, revokeRefreshToken } =
@@ -103,7 +104,7 @@ describe("registerUser", () => {
 
     await expect(registerUser("a@b.com", "plain-password")).rejects.toMatchObject({
       statusCode: 409,
-      message: "Email already in use",
+      message: ErrorCode.AUTH_EMAIL_ALREADY_IN_USE,
     });
     expect(generateAccessToken).not.toHaveBeenCalled();
     expect(prisma.refreshToken.create).not.toHaveBeenCalled();
@@ -124,7 +125,7 @@ describe("loginHandler", () => {
 
     await expect(loginHandler("nobody@b.com", "pw")).rejects.toMatchObject({
       statusCode: 401,
-      message: "Invalid credentials",
+      message: ErrorCode.AUTH_INVALID_CREDENTIALS,
     });
     expect(bcrypt.compare).not.toHaveBeenCalled();
   });
@@ -139,7 +140,7 @@ describe("loginHandler", () => {
 
     await expect(loginHandler("a@b.com", "wrong-pw")).rejects.toMatchObject({
       statusCode: 401,
-      message: "Invalid credentials",
+      message: ErrorCode.AUTH_INVALID_CREDENTIALS,
     });
   });
 

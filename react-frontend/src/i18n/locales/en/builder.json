@@ -1,0 +1,116 @@
+{
+  "backToDashboard": "Back to dashboard",
+  "unsavedChanges": "Unsaved changes",
+  "allSaved": "All changes saved",
+  "saving": "Saving...",
+  "saveForm": "Save form",
+  "saveSuccess": "Form saved successfully!",
+  "saveError": "Failed to save the form.",
+  "titlePlaceholder": "Survey title",
+  "descriptionPlaceholder": "Add a survey description...",
+  "responseMode": {
+    "label": "Response mode",
+    "hint": "How respondents will answer the questions",
+    "allAtOnce": "All at once",
+    "stepByStep": "One at a time"
+  },
+  "emptyState": "Drag an item from the sidebar or use the add buttons to create your first question.",
+  "leaveModal": {
+    "title": "You have unsaved changes",
+    "description": "Are you sure you want to leave?",
+    "confirm": "Leave without saving",
+    "cancel": "Stay"
+  },
+  "booleanPreview": {
+    "label": "Toggle preview:",
+    "on": "On",
+    "off": "Off"
+  },
+  "datePreview": "Calendar date picker field (DD.MM.YYYY)",
+  "dropdownPlaceholder": "Choose an option...",
+  "emptyOption": "Empty option...",
+  "inlineAdd": {
+    "addHere": "Add a question here",
+    "questionTypes": "Question types"
+  },
+  "questionCard": {
+    "dragHandle": "Drag question",
+    "textPlaceholder": "Untitled question",
+    "textAriaLabel": "Question text",
+    "descriptionPlaceholder": "Add a description (optional)...",
+    "descriptionAriaLabel": "Question description (optional)",
+    "configPlaceholder": "Configuration for {{type}} will be here...",
+    "toggleBadge": "Toggle",
+    "duplicate": "Duplicate question",
+    "delete": "Delete question"
+  },
+  "questionTypes": {
+    "TEXT": "Text field",
+    "NUMBER": "Number field",
+    "CHOICE_SINGLE": "Single choice",
+    "CHOICE_MULTI": "Multiple choice",
+    "BOOLEAN": "Yes / No",
+    "DATE": "Date picker"
+  },
+  "editors": {
+    "text": {
+      "variantLabel": "Field variant",
+      "variantInput": "Single line (Input)",
+      "variantTextarea": "Multi-line (Textarea)",
+      "variantEmail": "Email address",
+      "variantName": "Person's name",
+      "minLength": "Min. chars",
+      "maxLength": "Max. chars",
+      "minMaxError": "Minimum length can't be greater than maximum length"
+    },
+    "number": {
+      "min": "Minimum number",
+      "max": "Maximum number",
+      "noLimit": "No limit",
+      "minMaxError": "Minimum value can't be greater than maximum value"
+    },
+    "boolean": {
+      "defaultValueLabel": "Default value",
+      "off": "❌ Off (False)",
+      "on": "✅ On (True)",
+      "hint": "💡 The respondent will see this field in the specified state when opening the form."
+    },
+    "options": {
+      "newOptionText": "Option {{number}}",
+      "label": "Answer options and default value",
+      "removeDefaultTitle": "Remove default selection",
+      "setDefaultTitle": "Set as default",
+      "textPlaceholder": "Enter option text...",
+      "addOption": "Add option",
+      "displayStyleLabel": "How respondents will see this",
+      "displayList": "List",
+      "displayTabs": "Tabs",
+      "displayDropdown": "Dropdown",
+      "dropdownDisabledHint": "Dropdown is only available for single-choice questions"
+    },
+    "condition": {
+      "enableLabel": "Show only if a condition is met (conditional logic)",
+      "noTargetsHint": "A display condition can only be added for questions that come after other questions.",
+      "executeLabel": "Match:",
+      "logicAll": "ALL conditions",
+      "logicAny": "ANY of the conditions",
+      "ifWord": "If",
+      "andWord": "and",
+      "untitledQuestion": "Untitled",
+      "removeRule": "Remove this condition",
+      "addRule": "+ Add condition",
+      "chooseOption": "Choose an option...",
+      "valuePlaceholder": "Value...",
+      "booleanNo": "No",
+      "booleanYes": "Yes",
+      "operators": {
+        "equals": "equals",
+        "notEquals": "does not equal",
+        "contains": "contains",
+        "in": "is one of",
+        "gt": "is greater than",
+        "lt": "is less than"
+      }
+    }
+  }
+}

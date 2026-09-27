@@ -1,4 +1,5 @@
 import { Droppable, Draggable } from "@hello-pangea/dnd";
+import { useTranslation } from "react-i18next";
 import { type QuestionOption, type QuestionDisplayVariant } from "../../../../types/formBuilder";
 
 interface OptionsConfigEditorProps {
@@ -18,10 +19,12 @@ export default function OptionsConfigEditor({
   onChangeOptions,
   onChangeDisplayVariant,
 }: OptionsConfigEditorProps) {
+  const { t } = useTranslation();
+
   const handleAddOption = () => {
     const newOption: QuestionOption = {
       id: `opt-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
-      text: `Варіант ${options.length + 1}`,
+      text: t("builder.editors.options.newOptionText", { number: options.length + 1 }),
       isDefault: false,
     };
     onChangeOptions([...options, newOption]);
@@ -53,7 +56,7 @@ export default function OptionsConfigEditor({
     <div className="space-y-4 animate-in fade-in duration-150">
       <div className="space-y-2">
         <label className="text-xs font-semibold text-slate-500 block">
-          Варіанти відповідей та значення за замовчуванням
+          {t("builder.editors.options.label")}
         </label>
 
         <Droppable droppableId={`options-${questionIndex}`} type="OPTIONS">
@@ -97,7 +100,9 @@ export default function OptionsConfigEditor({
                             : "bg-white border-slate-300 hover:border-slate-400"
                         }`}
                         title={
-                          option.isDefault ? "Прибрати вибір за замовчуванням" : "Зробити дефолтним"
+                          option.isDefault
+                            ? t("builder.editors.options.removeDefaultTitle")
+                            : t("builder.editors.options.setDefaultTitle")
                         }
                       >
                         {option.isDefault &&
@@ -125,7 +130,7 @@ export default function OptionsConfigEditor({
                         value={option.text}
                         onChange={(e) => handleTextChange(index, e.target.value)}
                         className="flex-1 min-w-0 bg-transparent text-sm font-medium text-slate-700 focus:outline-none placeholder-slate-400"
-                        placeholder="Введіть варіант..."
+                        placeholder={t("builder.editors.options.textPlaceholder")}
                       />
 
                       <button
@@ -171,7 +176,7 @@ export default function OptionsConfigEditor({
           >
             <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5H4.5" />
           </svg>
-          Додати варіант
+          {t("builder.editors.options.addOption")}
         </button>
       </div>
 
@@ -179,7 +184,7 @@ export default function OptionsConfigEditor({
 
       <div className="flex flex-col gap-1.5">
         <label className="text-xs font-semibold text-slate-500">
-          Стиль відображення респонденту
+          {t("builder.editors.options.displayStyleLabel")}
         </label>
 
         <div className="flex flex-wrap gap-2 bg-slate-100 p-1 rounded-xl w-fit">
@@ -192,7 +197,7 @@ export default function OptionsConfigEditor({
                 : "text-slate-500 hover:text-slate-800"
             }`}
           >
-            Список
+            {t("builder.editors.options.displayList")}
           </button>
 
           <button
@@ -204,20 +209,9 @@ export default function OptionsConfigEditor({
                 : "text-slate-500 hover:text-slate-800"
             }`}
           >
-            Таби
+            {t("builder.editors.options.displayTabs")}
           </button>
 
-          {/* <button
-            type="button"
-            onClick={() => onChangeDisplayVariant("dropdown")}
-            className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer ${
-              displayVariant === "dropdown"
-                ? "bg-white text-slate-800 shadow-sm"
-                : "text-slate-500 hover:text-slate-800"
-            }`}
-          >
-            Дропдаун
-          </button> */}
           <button
             type="button"
             disabled={questionType === "CHOICE_MULTI"}
@@ -229,11 +223,11 @@ export default function OptionsConfigEditor({
             }`}
             title={
               questionType === "CHOICE_MULTI"
-                ? "Дропдаун доступний тільки для питань з одним варіантом відповіді"
+                ? t("builder.editors.options.dropdownDisabledHint")
                 : ""
             }
           >
-            Дропдаун
+            {t("builder.editors.options.displayDropdown")}
           </button>
         </div>
       </div>

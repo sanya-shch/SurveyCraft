@@ -3,7 +3,7 @@ import type { FormPathsDto } from "@surveycraft/shared-types";
 import { apiGet, ApiError } from "../api/client";
 
 export const getPathsErrorMessage = (e: unknown): string =>
-  e instanceof ApiError ? "Не вдалося завантажити шляхи проходження" : "Помилка мережі";
+  e instanceof ApiError ? "analytics.errors.pathsLoadFailed" : "analytics.errors.networkError";
 
 export function useFormPaths(apiBaseUrl: string, formId: string) {
   const data = shallowRef<FormPathsDto | null>(null);

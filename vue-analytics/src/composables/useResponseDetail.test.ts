@@ -13,11 +13,11 @@ const mockedApiGet = vi.mocked(apiGet);
 describe("getResponseDetailErrorMessage (чиста функція, без async/mock)", () => {
   it("ApiError -> повідомлення про деталі відповіді", () => {
     expect(getResponseDetailErrorMessage(new ApiError(404, "x"))).toBe(
-      "Не вдалося завантажити деталі відповіді",
+      "analytics.errors.responseDetailLoadFailed",
     );
   });
   it("не-ApiError -> 'Помилка мережі'", () => {
-    expect(getResponseDetailErrorMessage(new TypeError("x"))).toBe("Помилка мережі");
+    expect(getResponseDetailErrorMessage(new TypeError("x"))).toBe("analytics.errors.networkError");
   });
 });
 

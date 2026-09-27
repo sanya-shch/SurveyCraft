@@ -3,7 +3,7 @@ import type { FormFunnelDto } from "@surveycraft/shared-types";
 import { apiGet, ApiError } from "../api/client";
 
 export const getFunnelErrorMessage = (e: unknown): string =>
-  e instanceof ApiError ? "Не вдалося завантажити funnel-аналітику" : "Помилка мережі";
+  e instanceof ApiError ? "analytics.errors.funnelLoadFailed" : "analytics.errors.networkError";
 
 export function useFormFunnel(apiBaseUrl: string, formId: string) {
   const data = shallowRef<FormFunnelDto | null>(null);

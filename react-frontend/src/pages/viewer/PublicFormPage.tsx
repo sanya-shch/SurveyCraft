@@ -1,10 +1,13 @@
 import { useParams } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { type FormAnswers } from "../../types/formViewer";
 import { usePublicFormQuery, useSubmitResponsesMutation } from "./hooks/usePublicForm";
 import FormViewer from "./FormViewer";
 import QuestionStepper from "./QuestionStepper";
 import { useMemo, useState } from "react";
 import { getOrCreateSessionKey } from "./sessionKey";
+import { type FieldValidationError } from "./questionValidation";
+import { getApiErrorMessage } from "../../i18n/errorCodes";
 
 interface ExpectedError {
   response?: {
@@ -16,11 +19,14 @@ interface ExpectedError {
 }
 
 export default function PublicFormPage() {
+  const { t } = useTranslation();
   const { shareId } = useParams<{ shareId: string }>();
 
   const { data: formData, isLoading, error } = usePublicFormQuery(shareId);
 
-  const [formServerErrors, setFormServerErrors] = useState<Record<string, string>>({});
+  const [formServerErrors, setFormServerErrors] = useState<Record<string, FieldValidationError>>(
+    {},
+  );
 
   // Один sessionKey на shareId, стабільний у межах вкладки (sessionStorage) -
   // об'єднує autosave-чернетку (useAttemptAutosave у FormViewer/
@@ -55,14 +61,12 @@ export default function PublicFormPage() {
 
             const errorResponseBody = err.response?.data || err.data;
 
-            console.log("Дебаг помилки в onError:", errorResponseBody);
-
             if (errorResponseBody && Array.isArray(errorResponseBody.errors)) {
-              const mappedErrors: Record<string, string> = {};
+              const mappedErrors: Record<string, FieldValidationError> = {};
 
               errorResponseBody.errors.forEach((err: { field: string; message: string }) => {
                 if (!mappedErrors[err.field]) {
-                  mappedErrors[err.field] = err.message;
+                  mappedErrors[err.field] = { key: `errors.${err.message}` };
                 }
               });
 
@@ -88,7 +92,7 @@ export default function PublicFormPage() {
       <div className="min-h-screen bg-slate-50 flex items-center justify-center">
         <div className="flex flex-col items-center gap-3">
           <div className="h-8 w-8 animate-spin rounded-full border-4 border-slate-200 border-t-indigo-600" />
-          <p className="text-sm font-semibold text-slate-500">Завантаження опитування...</p>
+          <p className="text-sm font-semibold text-slate-500">{t("viewer.loading")}</p>
         </div>
       </div>
     );
@@ -113,10 +117,8 @@ export default function PublicFormPage() {
               />
             </svg>
           </div>
-          <h3 className="text-base font-bold text-slate-800">Помилка доступу</h3>
-          <p className="text-sm text-slate-500 mt-1">
-            {error instanceof Error ? error.message : "Форму не знайдено або доступ обмежено"}
-          </p>
+          <h3 className="text-base font-bold text-slate-800">{t("viewer.accessError.title")}</h3>
+          <p className="text-sm text-slate-500 mt-1">{getApiErrorMessage(t, error)}</p>
         </div>
       </div>
     );
@@ -137,10 +139,8 @@ export default function PublicFormPage() {
               <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
             </svg>
           </div>
-          <h2 className="text-xl font-bold text-slate-800">Дякуємо!</h2>
-          <p className="text-sm text-slate-500 mt-2">
-            Ваші відповіді успішно збережено. Опитування завершено.
-          </p>
+          <h2 className="text-xl font-bold text-slate-800">{t("viewer.thankYou.title")}</h2>
+          <p className="text-sm text-slate-500 mt-2">{t("viewer.thankYou.subtitle")}</p>
         </div>
       </div>
     );

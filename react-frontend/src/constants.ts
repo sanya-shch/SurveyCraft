@@ -1,10 +1,15 @@
 import type { QuestionType } from "./types/formBuilder";
 
-export const QUESTION_TYPE_LABELS: Record<QuestionType, string> = {
-  TEXT: "Текстове поле",
-  NUMBER: "Числове поле",
-  CHOICE_SINGLE: "Один вибір",
-  CHOICE_MULTI: "Кілька виборів",
-  BOOLEAN: "Так / Ні",
-  DATE: "Вибір дати",
+/**
+ * Значення - ключі i18next (react-frontend/src/i18n/locales/{uk,en}/builder.json,
+ * секція questionTypes), а НЕ готовий текст - переклад відбувається в
+ * місці показу через t(QUESTION_TYPE_LABEL_KEYS[type]).
+ */
+export const QUESTION_TYPE_LABEL_KEYS: Record<QuestionType, string> = {
+  TEXT: "builder.questionTypes.TEXT",
+  NUMBER: "builder.questionTypes.NUMBER",
+  CHOICE_SINGLE: "builder.questionTypes.CHOICE_SINGLE",
+  CHOICE_MULTI: "builder.questionTypes.CHOICE_MULTI",
+  BOOLEAN: "builder.questionTypes.BOOLEAN",
+  DATE: "builder.questionTypes.DATE",
 } as const;

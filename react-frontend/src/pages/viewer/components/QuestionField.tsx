@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { type Question } from "../../../types/formBuilder";
 import { type AnswerValue } from "../../../types/formViewer";
 
@@ -20,6 +21,7 @@ export default function QuestionField({
   describedBy,
   invalid,
 }: QuestionFieldProps) {
+  const { t } = useTranslation();
   const displayVariant = question.config?.displayVariant || "list";
 
   if (question.type === "TEXT") {
@@ -31,7 +33,7 @@ export default function QuestionField({
         value={(value as string) || ""}
         onChange={(e) => onChange(e.target.value)}
         className="w-full min-h-[100px] rounded-xl border border-slate-200 px-3 py-2 text-sm text-slate-800 focus:border-indigo-500 focus:outline-none placeholder-slate-400"
-        placeholder="Введіть розгорнуту відповідь..."
+        placeholder={t("viewer.textareaPlaceholder")}
       />
     ) : (
       <input
@@ -42,7 +44,7 @@ export default function QuestionField({
         value={(value as string) || ""}
         onChange={(e) => onChange(e.target.value)}
         className="w-full h-10 rounded-xl border border-slate-200 px-3 text-sm text-slate-800 focus:border-indigo-500 focus:outline-none placeholder-slate-400"
-        placeholder="Введіть відповідь..."
+        placeholder={t("viewer.textInputPlaceholder")}
       />
     );
   }
@@ -84,7 +86,7 @@ export default function QuestionField({
           />
         </button>
         <span aria-hidden="true" className="text-sm font-medium text-slate-600">
-          {value ? "Так" : "Ні"}
+          {value ? t("viewer.stepper.booleanYes") : t("viewer.stepper.booleanNo")}
         </span>
       </div>
     );
@@ -133,7 +135,7 @@ export default function QuestionField({
             onChange={(e) => onChange(e.target.value)}
             className="w-full h-11 rounded-xl border border-slate-200 bg-white px-3 pr-10 text-sm font-medium text-slate-700 focus:border-indigo-500 focus:outline-none appearance-none cursor-pointer"
           >
-            <option value="">Оберіть варіант...</option>
+            <option value="">{t("builder.editors.condition.chooseOption")}</option>
             {question.options.map((option) => (
               <option key={option.id} value={option.id}>
                 {option.text}

@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { type FormSummary } from "../../../types/form";
 
 interface FormCardMenuProps {
@@ -20,6 +21,7 @@ export default function FormCardMenu({
 }: FormCardMenuProps) {
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
+  const { t } = useTranslation();
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -65,7 +67,7 @@ export default function FormCardMenu({
             }}
             className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm text-slate-700 hover:bg-slate-50 cursor-pointer"
           >
-            Копіювати лінк
+            {t("dashboard.menu.copyLink")}
           </button>
           <button
             onClick={(e) => {
@@ -75,7 +77,7 @@ export default function FormCardMenu({
             }}
             className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm text-slate-700 hover:bg-slate-50 cursor-pointer"
           >
-            Аналітика відповідей
+            {t("dashboard.menu.analytics")}
           </button>
           <button
             onClick={(e) => {
@@ -85,7 +87,7 @@ export default function FormCardMenu({
             }}
             className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm text-slate-700 hover:bg-slate-50 cursor-pointer"
           >
-            {form.isPublished ? "Зняти з публікації" : "Опублікувати"}
+            {form.isPublished ? t("dashboard.menu.unpublish") : t("dashboard.menu.publish")}
           </button>
           <button
             onClick={(e) => {
@@ -95,7 +97,7 @@ export default function FormCardMenu({
             }}
             className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm text-slate-700 hover:bg-slate-50 cursor-pointer"
           >
-            Дублювати
+            {t("dashboard.menu.duplicate")}
           </button>
           <hr className="my-1 border-slate-100" />
           <button
@@ -106,7 +108,7 @@ export default function FormCardMenu({
             }}
             className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm font-medium text-rose-600 hover:bg-rose-50 cursor-pointer"
           >
-            Видалити
+            {t("dashboard.menu.delete")}
           </button>
         </div>
       )}

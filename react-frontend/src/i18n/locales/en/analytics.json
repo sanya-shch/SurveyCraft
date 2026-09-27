@@ -1,0 +1,25 @@
+{
+  "header": {
+    "dashboardLink": "Dashboard",
+    "defaultFormTitle": "Survey"
+  },
+  "detail": {
+    "loadError": "Failed to load detailed analytics",
+    "goBack": "Go back",
+    "questionIdFallback": "Question ID: {{id}}",
+    "typeLabel": "Type: {{type}}",
+    "noDescription": "No question description",
+    "responsesLabel": "Responses",
+    "allAnswers": "All answers:",
+    "avgValue": "Average value",
+    "min": "Minimum",
+    "max": "Maximum",
+    "distribution": "Frequency distribution:",
+    "numberLabel": "Number {{value}}:",
+    "optionsRanking": "Option ranking:",
+    "optionIdSuffix": "(ID: {{id}})",
+    "options": "Options:",
+    "booleanTrue": "Positive answer (Yes / True)",
+    "booleanFalse": "Negative answer (No / False)"
+  }
+}

@@ -10,9 +10,9 @@ export const formsApi = {
   },
 
   // POST /api/forms
-  create: async (): Promise<FormSummary> => {
+  create: async (title: string): Promise<FormSummary> => {
     const response = await api.post("/forms", {
-      title: "Нове опитування",
+      title,
       description: "",
     });
     return response.data;

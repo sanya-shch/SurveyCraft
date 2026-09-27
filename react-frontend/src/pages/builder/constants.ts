@@ -1,3 +1,4 @@
+import type { TFunction } from "i18next";
 import {
   calendarIcon,
   choiceMultiIcon,
@@ -6,7 +7,7 @@ import {
   textIcon,
   toggleIcon,
 } from "../../components/ui/icons";
-import { QUESTION_TYPE_LABELS } from "../../constants";
+import { QUESTION_TYPE_LABEL_KEYS } from "../../constants";
 import type { QuestionType } from "../../types/formBuilder";
 
 interface SidebarItem {
@@ -15,15 +16,21 @@ interface SidebarItem {
   icon: string | React.ReactNode;
 }
 
-export const SIDEBAR_ITEMS: SidebarItem[] = [
-  { type: "TEXT", label: QUESTION_TYPE_LABELS.TEXT, icon: textIcon },
-  { type: "NUMBER", label: QUESTION_TYPE_LABELS.NUMBER, icon: numberIcon },
-  { type: "CHOICE_SINGLE", label: QUESTION_TYPE_LABELS.CHOICE_SINGLE, icon: choiceSingleIcon },
-  { type: "CHOICE_MULTI", label: QUESTION_TYPE_LABELS.CHOICE_MULTI, icon: choiceMultiIcon },
-  { type: "BOOLEAN", label: QUESTION_TYPE_LABELS.BOOLEAN, icon: toggleIcon },
+// Функція, а не статичний масив: підписи мають перераховуватись при зміні
+// мови, а не застигати на момент першого завантаження модуля.
+export const getSidebarItems = (t: TFunction): SidebarItem[] => [
+  { type: "TEXT", label: t(QUESTION_TYPE_LABEL_KEYS.TEXT), icon: textIcon },
+  { type: "NUMBER", label: t(QUESTION_TYPE_LABEL_KEYS.NUMBER), icon: numberIcon },
+  {
+    type: "CHOICE_SINGLE",
+    label: t(QUESTION_TYPE_LABEL_KEYS.CHOICE_SINGLE),
+    icon: choiceSingleIcon,
+  },
+  { type: "CHOICE_MULTI", label: t(QUESTION_TYPE_LABEL_KEYS.CHOICE_MULTI), icon: choiceMultiIcon },
+  { type: "BOOLEAN", label: t(QUESTION_TYPE_LABEL_KEYS.BOOLEAN), icon: toggleIcon },
   {
     type: "DATE",
-    label: QUESTION_TYPE_LABELS.DATE,
+    label: t(QUESTION_TYPE_LABEL_KEYS.DATE),
     icon: calendarIcon,
   },
 ];

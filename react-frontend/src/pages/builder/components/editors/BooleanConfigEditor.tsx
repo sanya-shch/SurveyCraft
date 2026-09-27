@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { type QuestionConfig } from "../../../../types/formBuilder";
 
 interface BooleanConfigEditorProps {
@@ -6,6 +7,7 @@ interface BooleanConfigEditorProps {
 }
 
 export default function BooleanConfigEditor({ config, onChange }: BooleanConfigEditorProps) {
+  const { t } = useTranslation();
   const currentConfig = config || {};
   const defaultValue = currentConfig.defaultValue ?? false;
 
@@ -16,7 +18,7 @@ export default function BooleanConfigEditor({ config, onChange }: BooleanConfigE
   return (
     <div className="space-y-3 animate-in fade-in duration-150">
       <label className="text-xs font-semibold text-slate-500 block">
-        Значення за замовчуванням (Default Value)
+        {t("builder.editors.boolean.defaultValueLabel")}
       </label>
 
       <div className="flex gap-2 bg-slate-100 p-1 rounded-xl w-fit">
@@ -29,7 +31,7 @@ export default function BooleanConfigEditor({ config, onChange }: BooleanConfigE
               : "text-slate-500 hover:text-slate-800"
           }`}
         >
-          ❌ Вимкнено (False)
+          {t("builder.editors.boolean.off")}
         </button>
 
         <button
@@ -41,12 +43,12 @@ export default function BooleanConfigEditor({ config, onChange }: BooleanConfigE
               : "text-slate-500 hover:text-slate-800"
           }`}
         >
-          ✅ Увімкнено (True)
+          {t("builder.editors.boolean.on")}
         </button>
       </div>
 
       <div className="flex items-center gap-2 mt-2 text-slate-400 text-[11px]">
-        <span>💡 Респондент побачить це поле у вказаному стані при відкритті форми.</span>
+        <span>{t("builder.editors.boolean.hint")}</span>
       </div>
     </div>
   );

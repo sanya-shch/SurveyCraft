@@ -3,7 +3,9 @@ import type { ResponseDetailsDto } from "@surveycraft/shared-types";
 import { apiGet, ApiError } from "../api/client";
 
 export const getResponseDetailErrorMessage = (e: unknown): string =>
-  e instanceof ApiError ? "Не вдалося завантажити деталі відповіді" : "Помилка мережі";
+  e instanceof ApiError
+    ? "analytics.errors.responseDetailLoadFailed"
+    : "analytics.errors.networkError";
 
 export function useResponseDetail(apiBaseUrl: string, formId: string) {
   const data = shallowRef<ResponseDetailsDto | null>(null);

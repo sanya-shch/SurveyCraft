@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { ErrorInfo } from "../../../../components/ui/ErrorInfo";
 import { type QuestionConfig } from "../../../../types/formBuilder";
 
@@ -9,6 +10,7 @@ interface TextConfigEditorProps {
 export type TextQuestionVariant = "input" | "textarea" | "email" | "name";
 
 export default function TextConfigEditor({ config, onChange }: TextConfigEditorProps) {
+  const { t } = useTranslation();
   const currentConfig = config || {};
   const variant = currentConfig.variant || "input";
 
@@ -38,22 +40,26 @@ export default function TextConfigEditor({ config, onChange }: TextConfigEditorP
     <div className="space-y-4 animate-in fade-in duration-150">
       <div className="flex flex-col sm:flex-row gap-4">
         <div className="flex-1 flex flex-col gap-1.5">
-          <label className="text-xs font-semibold text-slate-500">Варіант поля (Variant)</label>
+          <label className="text-xs font-semibold text-slate-500">
+            {t("builder.editors.text.variantLabel")}
+          </label>
           <select
             value={variant}
             onChange={(e) => updateConfig({ variant: e.target.value as TextQuestionVariant })}
             className="h-10 rounded-xl border border-slate-200 bg-white px-3 text-sm font-medium text-slate-700 cursor-pointer focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
           >
-            <option value="input">Рядок тексту (Input)</option>
-            <option value="textarea">Багаторядковий текст (Textarea)</option>
-            <option value="email">Електронна пошта (Email)</option>
-            <option value="name">Ім'я користувача</option>
+            <option value="input">{t("builder.editors.text.variantInput")}</option>
+            <option value="textarea">{t("builder.editors.text.variantTextarea")}</option>
+            <option value="email">{t("builder.editors.text.variantEmail")}</option>
+            <option value="name">{t("builder.editors.text.variantName")}</option>
           </select>
         </div>
 
         <div className="flex flex-row gap-3">
           <div className="w-24 flex flex-col gap-1.5">
-            <label className="text-xs font-semibold text-slate-500">Мін. симв.</label>
+            <label className="text-xs font-semibold text-slate-500">
+              {t("builder.editors.text.minLength")}
+            </label>
             <input
               type="number"
               placeholder="0"
@@ -68,7 +74,9 @@ export default function TextConfigEditor({ config, onChange }: TextConfigEditorP
             />
           </div>
           <div className="w-24 flex flex-col gap-1.5">
-            <label className="text-xs font-semibold text-slate-500">Макс. симв.</label>
+            <label className="text-xs font-semibold text-slate-500">
+              {t("builder.editors.text.maxLength")}
+            </label>
             <input
               type="number"
               placeholder="—"
@@ -85,9 +93,7 @@ export default function TextConfigEditor({ config, onChange }: TextConfigEditorP
         </div>
       </div>
 
-      {hasValidationError && (
-        <ErrorInfo errorText="Мінімальна кількість символів не може бути більшим за максимальне" />
-      )}
+      {hasValidationError && <ErrorInfo errorText={t("builder.editors.text.minMaxError")} />}
     </div>
   );
 }

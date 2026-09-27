@@ -1,5 +1,16 @@
 import { type Question } from "../../types/formBuilder";
 import { type AnswerValue } from "../../types/formViewer";
+import { ErrorCode } from "@surveycraft/shared-types";
+
+/**
+ * Результат валідації - НЕ готовий текст, а ключ перекладу i18next (+
+ * параметри для інтерполяції, напр. {{min}}) - переклад відбувається у
+ * компоненті показу (QuestionField.tsx) через t(error.key, error.params).
+ * Ця функція - чистий, синхронний utility без доступу до React-контексту
+ * (і, відповідно, без доступу до поточної обраної мови), тому фізично не
+ * може повернути вже перекладений рядок.
+ */
+export type FieldValidationError = { key: string; params?: Record<string, unknown> };
 
 /**
  * Валідація одного поля відповіді - винесена окремо від FormViewer, щоб
@@ -9,53 +20,59 @@ import { type AnswerValue } from "../../types/formViewer";
  * (QuestionStepper). Дублювання цих правил у двох місцях рано чи пізно
  * розійшлося б (наприклад, поправили regex email в одному, забули в іншому).
  */
-export const validateField = (q: Question, value: AnswerValue): string | null => {
+export const validateField = (q: Question, value: AnswerValue): FieldValidationError | null => {
   const isEmptyText = typeof value === "string" && value.trim() === "";
   const isEmptyArray = Array.isArray(value) && value.length === 0;
   const isUndefinedOrNull = value === undefined || value === null || value === "";
   const isEmpty = isEmptyText || isEmptyArray || isUndefinedOrNull;
 
   if (q.required && isEmpty) {
-    return "Це поле є обов'язковим для заповнення";
+    return { key: `errors.${ErrorCode.VALIDATION_FIELD_REQUIRED}` };
   }
 
   if (isEmpty) return null;
 
   if (q.type === "NUMBER" && typeof value === "number") {
     if (q.config?.min !== undefined && value < q.config.min)
-      return `Значення має бути не менше ${q.config.min}`;
+      return { key: "viewer.validation.numberMin", params: { min: q.config.min } };
     if (q.config?.max !== undefined && value > q.config.max)
-      return `Значення має бути не більше ${q.config.max}`;
+      return { key: "viewer.validation.numberMax", params: { max: q.config.max } };
   }
 
   if (q.type === "TEXT" && typeof value === "string") {
     const trimmedValue = value.trim();
 
     if (q.config?.minLength !== undefined && trimmedValue.length < q.config.minLength) {
-      return `Мінімальна кількість символів: ${q.config.minLength}`;
+      return {
+        key: "viewer.validation.textMinLength",
+        params: { minLength: q.config.minLength },
+      };
     }
     if (q.config?.maxLength !== undefined && trimmedValue.length > q.config.maxLength) {
-      return `Максимальна кількість символів: ${q.config.maxLength}`;
+      return {
+        key: "viewer.validation.textMaxLength",
+        params: { maxLength: q.config.maxLength },
+      };
     }
 
     if (q.config?.variant === "email") {
       const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
       if (!emailRegex.test(trimmedValue)) {
-        return "Введіть коректну електронну адресу";
+        return { key: `errors.${ErrorCode.VALIDATION_EMAIL_INVALID}` };
       }
     }
 
     if (q.config?.variant === "name") {
       const nameRegex = /^[a-zA-Zа-яА-ЯіІїЇєЄґҐ\s'\u2019\u02BC-]+$/;
       if (!nameRegex.test(trimmedValue)) {
-        return "Ім'я може містити лише літери, пробіли або дефіси";
+        return { key: "viewer.validation.nameInvalid" };
       }
     }
 
     if (q.config?.pattern) {
       const regex = new RegExp(q.config.pattern);
       if (!regex.test(trimmedValue)) {
-        return "Невірний формат вводу";
+        return { key: `errors.${ErrorCode.VALIDATION_FORMAT_INVALID}` };
       }
     }
   }
@@ -75,12 +92,12 @@ export const getDefaultAnswer = (q: Question): AnswerValue => {
   return "";
 };
 
-/** Валідує набір питань (типово - лише видимі) і повертає мапу помилок questionId -> текст. */
+/** Валідує набір питань (типово - лише видимі) і повертає мапу помилок questionId -> ключ перекладу. */
 export const validateAll = (
   questions: Question[],
   answers: Record<string, AnswerValue>,
-): Record<string, string> => {
-  const errors: Record<string, string> = {};
+): Record<string, FieldValidationError> => {
+  const errors: Record<string, FieldValidationError> = {};
   questions.forEach((q, index) => {
     const qId = q.id || `q-${index}`;
     const error = validateField(q, answers[qId]);

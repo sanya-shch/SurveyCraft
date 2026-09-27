@@ -1,0 +1,93 @@
+{
+  "analytics": {
+    "common": {
+      "untitledQuestion": "Питання без назви",
+      "loading": "Завантаження...",
+      "avg": "середнє",
+      "min": "мін",
+      "max": "макс",
+      "booleanYes": "Так: {count}",
+      "booleanNo": "Ні: {count}",
+      "requiredAriaLabel": "обов'язкове питання"
+    },
+    "errors": {
+      "accessDenied": "Немає доступу до аналітики цієї форми",
+      "formNotFound": "Форму не знайдено",
+      "loadFailed": "Не вдалося завантажити аналітику",
+      "networkError": "Помилка мережі",
+      "funnelLoadFailed": "Не вдалося завантажити funnel-аналітику",
+      "pathsLoadFailed": "Не вдалося завантажити шляхи проходження",
+      "questionDetailsLoadFailed": "Не вдалося завантажити деталі питання",
+      "responseDetailLoadFailed": "Не вдалося завантажити деталі відповіді",
+      "responsesListLoadFailed": "Не вдалося завантажити відповіді",
+      "exportListLoadFailed": "Не вдалося завантажити список експортів"
+    },
+    "header": {
+      "title": "Аналітика форми",
+      "subtitle": "Vue 3 · завантажено через Module Federation",
+      "totalResponses": "{count} відповідей"
+    },
+    "tabs": {
+      "overview": "Огляд",
+      "responses": "Сирі відповіді"
+    },
+    "funnel": {
+      "sectionTitle": "Funnel проходження",
+      "loading": "Завантаження funnel...",
+      "attempts": "заходів",
+      "completed": "завершили ({completions} з {total})",
+      "hint": "На відміну від \"Шляхів проходження\" вище, тут враховані й покинуті проходження (autosave чернетки), не лише завершені відповіді — це і є справжній funnel.",
+      "empty": "Ще немає жодного заходу на форму.",
+      "dropOff": "−{count} відсіялись на цьому кроці"
+    },
+    "analyticsSection": {
+      "loading": "Завантаження аналітики...",
+      "emptyState": "Ще немає жодної завершеної відповіді на цю форму."
+    },
+    "paths": {
+      "sectionTitle": "Шляхи проходження",
+      "sectionHint": "Популярність гілок серед завершених відповідей. Для funnel з покинутими проходженнями дивіться секцію \"Funnel проходження\" вище.",
+      "loading": "Завантаження шляхів...",
+      "start": "Старт ({count})",
+      "ofTotal": "{count} з {total} ({percent}%)",
+      "hint": "Вигнуті лінії — гілки, де проміжне питання було приховане умовою (перехід минає його напряму)."
+    },
+    "questionCard": {
+      "hiddenByCondition": "приховано умовою: {count}",
+      "shownButSkipped": "показано, але пропущено: {count}",
+      "noData": "Немає відповідей"
+    },
+    "detailPanel": {
+      "close": "Закрити панель деталей",
+      "totalAnswers": "Відповідей: {count}",
+      "allAnswers": "Усі відповіді:"
+    },
+    "responsesList": {
+      "title": "Всі відповіді",
+      "loading": "Завантаження списку...",
+      "empty": "Немає відповідей",
+      "back": "Назад",
+      "pageLabel": "Сторінка {page}",
+      "next": "Вперед"
+    },
+    "responseDetail": {
+      "placeholder": "Оберіть відповідь зі списку ліворуч для перегляду деталей",
+      "title": "Перегляд відповіді",
+      "submittedAt": "Надіслано: {date}"
+    },
+    "export": {
+      "trigger": "Експорт",
+      "newExport": "Новий експорт",
+      "createError": "Не вдалося поставити завдання в чергу. Спробуйте ще раз.",
+      "history": "Історія",
+      "noHistory": "Ще не було жодного експорту",
+      "download": "Завантажити",
+      "status": {
+        "pending": "У черзі",
+        "processing": "Генерується...",
+        "completed": "Готово",
+        "failed": "Помилка"
+      }
+    }
+  }
+}

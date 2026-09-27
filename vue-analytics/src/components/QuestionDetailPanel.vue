@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { onMounted, onUnmounted, ref } from "vue";
+import { useI18n } from "vue-i18n";
 import type { QuestionAnalyticsDto } from "@surveycraft/shared-types";
 
 defineProps<{
@@ -9,6 +10,8 @@ defineProps<{
 }>();
 
 const emit = defineEmits<{ (e: "close"): void }>();
+
+const { t } = useI18n();
 
 const closeButtonRef = ref<HTMLButtonElement | null>(null);
 
@@ -35,29 +38,29 @@ onUnmounted(() => {
         ref="closeButtonRef"
         type="button"
         class="close-btn"
-        aria-label="Закрити панель деталей"
+        :aria-label="t('analytics.detailPanel.close')"
         @click="$emit('close')"
       >
         <span aria-hidden="true">✕</span>
       </button>
 
-      <div v-if="isLoading" class="state-msg" role="status">Завантаження...</div>
-      <div v-else-if="error" class="state-msg state-msg--error" role="alert">{{ error }}</div>
+      <div v-if="isLoading" class="state-msg" role="status">{{ t("analytics.common.loading") }}</div>
+      <div v-else-if="error" class="state-msg state-msg--error" role="alert">{{ t(error) }}</div>
 
       <template v-else-if="data">
-        <h2 id="question-detail-title" class="title">{{ data.question.text || "Питання без назви" }}</h2>
+        <h2 id="question-detail-title" class="title">{{ data.question.text || t("analytics.common.untitledQuestion") }}</h2>
         <p v-if="data.question.description" class="description">{{ data.question.description }}</p>
-        <p class="total">Відповідей: {{ data.totalAnswers }}</p>
+        <p class="total">{{ t("analytics.detailPanel.totalAnswers", { count: data.totalAnswers }) }}</p>
 
         <div v-if="data.stats" class="stats-row">
-          <div class="stat"><span class="stat-value">{{ data.stats.avg.toFixed(2) }}</span><span class="stat-label">середнє</span></div>
-          <div class="stat"><span class="stat-value">{{ data.stats.min }}</span><span class="stat-label">мін</span></div>
-          <div class="stat"><span class="stat-value">{{ data.stats.max }}</span><span class="stat-label">макс</span></div>
+          <div class="stat"><span class="stat-value">{{ data.stats.avg.toFixed(2) }}</span><span class="stat-label">{{ t("analytics.common.avg") }}</span></div>
+          <div class="stat"><span class="stat-value">{{ data.stats.min }}</span><span class="stat-label">{{ t("analytics.common.min") }}</span></div>
+          <div class="stat"><span class="stat-value">{{ data.stats.max }}</span><span class="stat-label">{{ t("analytics.common.max") }}</span></div>
         </div>
 
         <div v-if="typeof data.trueCount === 'number'" class="bool-legend">
-          <span>Так: {{ data.trueCount }}</span>
-          <span>Ні: {{ data.falseCount }}</span>
+          <span>{{ t("analytics.common.booleanYes", { count: data.trueCount }) }}</span>
+          <span>{{ t("analytics.common.booleanNo", { count: data.falseCount }) }}</span>
         </div>
 
         <div v-if="data.distribution?.length" class="distribution">
@@ -74,7 +77,7 @@ onUnmounted(() => {
         </div>
 
         <div v-if="data.answers?.length" class="answers-list">
-          <p class="answers-title">Усі відповіді:</p>
+          <p class="answers-title">{{ t("analytics.detailPanel.allAnswers") }}</p>
           <ul>
             <li v-for="(a, i) in data.answers" :key="i">{{ a }}</li>
           </ul>

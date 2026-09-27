@@ -1,27 +1,37 @@
 import { useState, useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import { type FormState, type Question, type QuestionType } from "../../../types/formBuilder";
 import { validateConditionGraph } from "@surveycraft/condition-engine";
+import { ErrorCode } from "@surveycraft/shared-types";
 
 const INITIAL_STATE: FormState = {
-  title: "Нове опитування",
+  title: "",
   description: "",
   responseMode: "ALL_AT_ONCE",
   questions: [],
 };
 
 export function useFormBuilder(initialData?: FormState) {
+  const { t } = useTranslation();
   const [form, setForm] = useState<FormState>(initialData || INITIAL_STATE);
   const [isDirty, setIsDirty] = useState(false);
 
   const [hasAttemptedSave, setHasAttemptedSave] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
+  /**
+   * Значення в `errors` - НЕ готовий текст, а повний ключ перекладу i18next
+   * ("errors.VALIDATION_FIELD_REQUIRED" або "conditionErrors.CYCLE") - той
+   * самий формат для обох джерел, щоб FormBuilder.tsx міг просто робити
+   * t(errors[key]) без розбору, звідки саме прийшла помилка.
+   */
   const validate = useCallback((formData: FormState): Record<string, string> => {
     const newErrors: Record<string, string> = {};
-    if (!formData.title.trim()) newErrors["title"] = "Назва форми обов'язкова";
+    if (!formData.title.trim())
+      newErrors["title"] = `errors.${ErrorCode.VALIDATION_FIELD_REQUIRED}`;
 
     formData.questions.forEach((q, index) => {
-      if (!q.text.trim()) newErrors[`q-${index}`] = "Текст питання обов'язковий";
+      if (!q.text.trim()) newErrors[`q-${index}`] = `errors.${ErrorCode.VALIDATION_FIELD_REQUIRED}`;
     });
 
     const questionsWithId = formData.questions.filter((q): q is Question & { id: string } =>
@@ -36,7 +46,7 @@ export function useFormBuilder(initialData?: FormState) {
       for (const err of graph.errors) {
         const index = indexByQuestionId.get(err.questionId);
         if (index !== undefined) {
-          newErrors[`q-${index}-condition`] = err.detail;
+          newErrors[`q-${index}-condition`] = `conditionErrors.${err.reason}`;
         }
       }
     }
@@ -209,7 +219,13 @@ export function useFormBuilder(initialData?: FormState) {
           required: false,
           order: index,
           options: isChoice
-            ? [{ id: `opt-${Date.now()}`, text: "Варіант 1", isDefault: false }]
+            ? [
+                {
+                  id: `opt-${Date.now()}`,
+                  text: t("builder.editors.options.newOptionText", { number: 1 }),
+                  isDefault: false,
+                },
+              ]
             : [],
           config: isChoice
             ? { displayVariant: "list" }
@@ -235,7 +251,7 @@ export function useFormBuilder(initialData?: FormState) {
       });
       setIsDirty(true);
     },
-    [hasAttemptedSave, validate],
+    [hasAttemptedSave, validate, t],
   );
 
   return {

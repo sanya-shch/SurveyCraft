@@ -1,9 +1,11 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 import { useAuthStore } from "../../store/useAuthStore";
 import { authApi } from "../../api/auth";
 import { formsApi } from "../../api/forms";
+import { LanguageSwitcher } from "../../components/ui/LanguageSwitcher";
 import FormCard from "./components/FormCard";
 
 export default function Dashboard() {
@@ -11,6 +13,7 @@ export default function Dashboard() {
   const queryClient = useQueryClient();
   const { user, clearAuth } = useAuthStore();
   const [searchQuery, setSearchQuery] = useState("");
+  const { t } = useTranslation();
 
   const { data: forms = [], isLoading } = useQuery({
     queryKey: ["forms"],
@@ -88,14 +91,17 @@ export default function Dashboard() {
           </div>
 
           <div className="flex items-center gap-4">
+            <LanguageSwitcher />
             <div className="text-right hidden sm:block">
-              <p className="text-sm font-semibold text-slate-700">Користувач</p>
+              <p className="text-sm font-semibold text-slate-700">
+                {t("dashboard.header.userLabel")}
+              </p>
               <p className="text-xs text-slate-400">{user?.email}</p>
             </div>
             <button
               onClick={handleLogout}
               className="rounded-lg border border-slate-200 p-2 text-slate-500 hover:bg-slate-50 hover:text-rose-600 transition-colors cursor-pointer"
-              title="Вийти"
+              title={t("dashboard.header.logoutTitle")}
             >
               <svg
                 className="h-5 w-5"
@@ -118,17 +124,19 @@ export default function Dashboard() {
       <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
         <section className="grid grid-cols-1 gap-4 sm:grid-cols-3 mb-8">
           <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-            <p className="text-sm font-medium text-slate-400">Всього форм</p>
+            <p className="text-sm font-medium text-slate-400">{t("dashboard.stats.totalForms")}</p>
             <p className="mt-2 text-3xl font-bold tracking-tight">{forms.length}</p>
           </div>
           <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-            <p className="text-sm font-medium text-slate-400">Опубліковано</p>
+            <p className="text-sm font-medium text-slate-400">{t("dashboard.stats.published")}</p>
             <p className="mt-2 text-3xl font-bold tracking-tight text-emerald-600">
               {forms.filter((f) => f.isPublished).length}
             </p>
           </div>
           <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-            <p className="text-sm font-medium text-slate-400">Отримано відповідей</p>
+            <p className="text-sm font-medium text-slate-400">
+              {t("dashboard.stats.totalResponses")}
+            </p>
             <p className="mt-2 text-3xl font-bold tracking-tight text-indigo-600">
               {totalResponses}
             </p>
@@ -154,7 +162,7 @@ export default function Dashboard() {
             </span>
             <input
               type="text"
-              placeholder="Пошук опитувань..."
+              placeholder={t("dashboard.searchPlaceholder")}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full rounded-xl border border-slate-200 bg-white py-2.5 pl-10 pr-4 text-sm text-slate-900 placeholder:text-slate-400 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 transition-shadow"
@@ -162,7 +170,7 @@ export default function Dashboard() {
           </div>
 
           <button
-            onClick={() => createFormMutation.mutate()}
+            onClick={() => createFormMutation.mutate(t("dashboard.newFormTitle"))}
             disabled={createFormMutation.isPending}
             className="inline-flex items-center justify-center gap-2 rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-indigo-500 disabled:bg-slate-300 shadow-sm transition-colors cursor-pointer"
           >
@@ -175,16 +183,16 @@ export default function Dashboard() {
             >
               <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
             </svg>
-            {createFormMutation.isPending ? "Створення..." : "Створити форму"}
+            {createFormMutation.isPending ? t("dashboard.creating") : t("dashboard.createButton")}
           </button>
         </div>
 
         {filteredForms.length === 0 ? (
           <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-slate-200 bg-white p-12 text-center">
-            <h3 className="text-sm font-semibold text-slate-900">Форм не знайдено</h3>
-            <p className="mt-1 text-sm text-slate-400">
-              Створіть своє перше опитування прямо зараз.
-            </p>
+            <h3 className="text-sm font-semibold text-slate-900">
+              {t("dashboard.emptyState.title")}
+            </h3>
+            <p className="mt-1 text-sm text-slate-400">{t("dashboard.emptyState.subtitle")}</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">

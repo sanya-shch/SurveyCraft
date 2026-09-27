@@ -1,5 +1,6 @@
 import { prisma } from "../../prisma/prisma.js";
 import { AppError } from "../../shared/middleware/errorHandler.js";
+import { ErrorCode } from "@surveycraft/shared-types";
 import { Answers } from "../response/response.types.js";
 import { resolveVisibleQuestionIds, type QuestionLike } from "@surveycraft/condition-engine";
 import { toJson } from "../../shared/utils/helpers.js";
@@ -27,11 +28,11 @@ export const saveAttempt = async (
   });
 
   if (!form) {
-    throw new AppError("Form not found", 404);
+    throw new AppError(ErrorCode.FORM_NOT_FOUND, 404);
   }
 
   if (!form.isPublished) {
-    throw new AppError("Form is not published", 400);
+    throw new AppError(ErrorCode.FORM_NOT_PUBLISHED, 400);
   }
 
   const visibleQuestionIds = resolveVisibleQuestionIds(

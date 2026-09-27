@@ -1,3 +1,5 @@
+import { useTranslation } from "react-i18next";
+import type { TFunction } from "i18next";
 import type {
   ConditionGroup,
   ConditionOperator,
@@ -23,14 +25,8 @@ const OPERATORS_BY_TYPE: Record<Question["type"], ConditionOperator[]> = {
   CHOICE_MULTI: ["contains"],
 };
 
-const OPERATOR_LABELS: Record<ConditionOperator, string> = {
-  equals: "дорівнює",
-  notEquals: "не дорівнює",
-  contains: "містить",
-  in: "є одним із",
-  gt: "більше ніж",
-  lt: "менше ніж",
-};
+const getOperatorLabel = (t: TFunction, op: ConditionOperator): string =>
+  t(`builder.editors.condition.operators.${op}`);
 
 const inputClass =
   "h-9 rounded-lg border border-slate-200 bg-white px-2.5 text-xs text-slate-700 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500";
@@ -42,12 +38,13 @@ export default function ConditionEditor({
   onChange,
   error,
 }: ConditionEditorProps) {
+  const { t } = useTranslation();
   const availableTargets = allQuestions.filter((q) => q.id && q.order < currentOrder);
 
   if (availableTargets.length === 0) {
     return (
       <p className="text-[11px] text-slate-400 italic">
-        Умову показу можна додати лише для питань, перед якими є інші питання.
+        {t("builder.editors.condition.noTargetsHint")}
       </p>
     );
   }
@@ -111,7 +108,7 @@ export default function ConditionEditor({
           className="h-3.5 w-3.5 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
         />
         <span className="text-xs font-semibold text-slate-500">
-          Показувати лише за умовою (conditional logic)
+          {t("builder.editors.condition.enableLabel")}
         </span>
       </label>
 
@@ -119,7 +116,9 @@ export default function ConditionEditor({
         <div className="rounded-xl border border-slate-100 bg-slate-50/60 p-3 space-y-2.5">
           {condition.rules.length > 1 && (
             <div className="flex items-center gap-2">
-              <span className="text-[11px] text-slate-400">Виконати:</span>
+              <span className="text-[11px] text-slate-400">
+                {t("builder.editors.condition.executeLabel")}
+              </span>
               <div className="flex gap-1 bg-white p-0.5 rounded-lg border border-slate-200 w-fit">
                 {(["AND", "OR"] as const).map((logic) => (
                   <button
@@ -132,7 +131,9 @@ export default function ConditionEditor({
                         : "text-slate-500 hover:text-slate-800"
                     }`}
                   >
-                    {logic === "AND" ? "УСІ умови" : "БУДЬ-ЯКА з умов"}
+                    {logic === "AND"
+                      ? t("builder.editors.condition.logicAll")
+                      : t("builder.editors.condition.logicAny")}
                   </button>
                 ))}
               </div>
@@ -146,7 +147,9 @@ export default function ConditionEditor({
             return (
               <div key={index} className="flex flex-wrap items-center gap-1.5">
                 <span className="text-[11px] text-slate-400 w-10 shrink-0">
-                  {index === 0 ? "Якщо" : "і"}
+                  {index === 0
+                    ? t("builder.editors.condition.ifWord")
+                    : t("builder.editors.condition.andWord")}
                 </span>
 
                 <select
@@ -156,7 +159,7 @@ export default function ConditionEditor({
                 >
                   {availableTargets.map((q) => (
                     <option key={q.id} value={q.id}>
-                      #{q.order + 1} {q.text || "Без назви"}
+                      #{q.order + 1} {q.text || t("builder.editors.condition.untitledQuestion")}
                     </option>
                   ))}
                 </select>
@@ -170,7 +173,7 @@ export default function ConditionEditor({
                 >
                   {operators.map((op) => (
                     <option key={op} value={op}>
-                      {OPERATOR_LABELS[op]}
+                      {getOperatorLabel(t, op)}
                     </option>
                   ))}
                 </select>
@@ -186,8 +189,8 @@ export default function ConditionEditor({
                   type="button"
                   onClick={() => removeRule(index)}
                   className="ml-auto text-slate-300 hover:text-rose-500 transition-colors cursor-pointer p-1"
-                  title="Прибрати цю умову"
-                  aria-label="Прибрати цю умову"
+                  title={t("builder.editors.condition.removeRule")}
+                  aria-label={t("builder.editors.condition.removeRule")}
                 >
                   <span aria-hidden="true">✕</span>
                 </button>
@@ -200,7 +203,7 @@ export default function ConditionEditor({
             onClick={addRule}
             className="text-[11px] font-semibold text-indigo-600 hover:text-indigo-700 cursor-pointer"
           >
-            + Додати умову
+            {t("builder.editors.condition.addRule")}
           </button>
         </div>
       )}
@@ -218,6 +221,8 @@ interface ConditionValueInputProps {
 }
 
 function ConditionValueInput({ target, operator, value, onChange }: ConditionValueInputProps) {
+  const { t } = useTranslation();
+
   if (!target) return null;
 
   if (target.type === "BOOLEAN") {
@@ -230,7 +235,7 @@ function ConditionValueInput({ target, operator, value, onChange }: ConditionVal
             value === false ? "bg-slate-700 text-white" : "text-slate-500 hover:text-slate-800"
           }`}
         >
-          Ні
+          {t("builder.editors.condition.booleanNo")}
         </button>
         <button
           type="button"
@@ -239,7 +244,7 @@ function ConditionValueInput({ target, operator, value, onChange }: ConditionVal
             value === true ? "bg-indigo-600 text-white" : "text-slate-500 hover:text-slate-800"
           }`}
         >
-          Так
+          {t("builder.editors.condition.booleanYes")}
         </button>
       </div>
     );
@@ -268,7 +273,7 @@ function ConditionValueInput({ target, operator, value, onChange }: ConditionVal
                 : "bg-white border-slate-200 text-slate-500 hover:border-slate-300"
             }`}
           >
-            {opt.text || "Без назви"}
+            {opt.text || t("builder.editors.condition.untitledQuestion")}
           </button>
         ))}
       </div>
@@ -286,11 +291,11 @@ function ConditionValueInput({ target, operator, value, onChange }: ConditionVal
         className={inputClass}
       >
         <option value="" disabled>
-          Оберіть варіант...
+          {t("builder.editors.condition.chooseOption")}
         </option>
         {target.options.map((opt) => (
           <option key={opt.id} value={opt.id}>
-            {opt.text || "Без назви"}
+            {opt.text || t("builder.editors.condition.untitledQuestion")}
           </option>
         ))}
       </select>
@@ -325,7 +330,7 @@ function ConditionValueInput({ target, operator, value, onChange }: ConditionVal
       type="text"
       value={typeof value === "string" ? value : ""}
       onChange={(e) => onChange(e.target.value)}
-      placeholder="Значення..."
+      placeholder={t("builder.editors.condition.valuePlaceholder")}
       className={`${inputClass} min-w-[8rem]`}
     />
   );

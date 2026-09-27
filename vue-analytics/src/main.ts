@@ -1,5 +1,6 @@
 import { createApp } from "vue";
 import AnalyticsApp from "./AnalyticsApp.vue";
+import { createAnalyticsI18n } from "./i18n";
 
 const FORM_ID_FROM_PATH = window.location.pathname.match(/\/analytics\/([^/]+)/)?.[1];
 const formId = FORM_ID_FROM_PATH || import.meta.env.VITE_DEV_FORM_ID || "";
@@ -22,5 +23,6 @@ if (!formId) {
     </div>
   `;
 } else {
-  createApp(AnalyticsApp, { formId, apiBaseUrl }).mount(appRoot);
+  const i18n = createAnalyticsI18n(navigator.language?.slice(0, 2));
+  createApp(AnalyticsApp, { formId, apiBaseUrl }).use(i18n).mount(appRoot);
 }

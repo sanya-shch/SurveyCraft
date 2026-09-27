@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { type Question } from "../../types/formBuilder";
 import { type FormAnswers } from "../../types/formViewer";
 import { ErrorInfo } from "../../components/ui/ErrorInfo";
@@ -9,6 +10,7 @@ import {
   validateField,
   validateAll,
   buildCleanedAnswers,
+  type FieldValidationError,
 } from "./questionValidation";
 import { useAttemptAutosave } from "./hooks/useAttemptAutosave";
 
@@ -17,7 +19,7 @@ interface FormViewerProps {
   formDescription?: string;
   questions: Question[];
   onSubmit: (data: FormAnswers) => void;
-  serverErrors?: Record<string, string>;
+  serverErrors?: Record<string, FieldValidationError>;
   onClearServerError?: (fieldId: string) => void;
   shareId?: string;
   sessionKey?: string;
@@ -33,6 +35,7 @@ export default function FormViewer({
   shareId,
   sessionKey = "",
 }: FormViewerProps) {
+  const { t } = useTranslation();
   const [answers, setAnswers] = useState<FormAnswers>(() => {
     const initialAnswers: FormAnswers = {};
     questions.forEach((q, index) => {
@@ -45,7 +48,7 @@ export default function FormViewer({
   useAttemptAutosave(shareId, sessionKey, answers);
 
   const [isSubmitAttempted, setIsSubmitAttempted] = useState(false);
-  const [localErrors, setLocalErrors] = useState<Record<string, string>>({});
+  const [localErrors, setLocalErrors] = useState<Record<string, FieldValidationError>>({});
   const combinedErrors = { ...serverErrors, ...localErrors };
 
   const visibleQuestionIds = useMemo(
@@ -142,9 +145,12 @@ export default function FormViewer({
                   htmlFor={qId}
                   className="text-base font-bold text-slate-800 flex items-center gap-1"
                 >
-                  {question.text || `Питання №${index + 1}`}
+                  {question.text || t("viewer.questionFallback", { number: index + 1 })}
                   {question.required && (
-                    <span className="text-rose-500" aria-label="обов'язкове питання">
+                    <span
+                      className="text-rose-500"
+                      aria-label={t("viewer.requiredQuestionAriaLabel")}
+                    >
                       *
                     </span>
                   )}
@@ -166,7 +172,7 @@ export default function FormViewer({
 
               {hasError && (
                 <div id={errorId}>
-                  <ErrorInfo errorText={combinedErrors[qId]} />
+                  <ErrorInfo errorText={t(combinedErrors[qId].key, combinedErrors[qId].params)} />
                 </div>
               )}
             </div>
@@ -178,7 +184,7 @@ export default function FormViewer({
             type="submit"
             className="w-full sm:w-auto inline-flex h-11 items-center justify-center rounded-xl bg-indigo-600 px-6 text-sm font-semibold text-white hover:bg-indigo-500 shadow-sm transition-colors focus:outline-none cursor-pointer"
           >
-            Надіслати відповіді
+            {t("viewer.submit")}
           </button>
         </div>
       </form>

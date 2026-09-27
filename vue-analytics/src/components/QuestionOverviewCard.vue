@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed } from "vue";
+import { useI18n } from "vue-i18n";
 import type { QuestionOverview } from "@surveycraft/shared-types";
 
 const props = defineProps<{
@@ -8,6 +9,8 @@ const props = defineProps<{
 }>();
 
 defineEmits<{ (e: "open-detail", questionId: string): void }>();
+
+const { t } = useI18n();
 
 const hasVisibilityInfo = computed(
   () => (props.question.hiddenCount ?? 0) > 0 || (props.question.skippedCount ?? 0) > 0,
@@ -23,16 +26,16 @@ const maxDistributionCount = computed(
 <template>
   <button type="button" class="card" @click="$emit('open-detail', question.id)">
     <div class="card-header">
-      <span class="card-title">{{ question.text || "Питання без назви" }}</span>
+      <span class="card-title">{{ question.text || t("analytics.common.untitledQuestion") }}</span>
       <span class="card-type">{{ question.type }}</span>
     </div>
 
     <div v-if="hasVisibilityInfo" class="visibility-badges">
       <span v-if="(question.hiddenCount ?? 0) > 0" class="badge badge--hidden">
-        приховано умовою: {{ question.hiddenCount }}
+        {{ t("analytics.questionCard.hiddenByCondition", { count: question.hiddenCount }) }}
       </span>
       <span v-if="(question.skippedCount ?? 0) > 0" class="badge badge--skipped">
-        показано, але пропущено: {{ question.skippedCount }}
+        {{ t("analytics.questionCard.shownButSkipped", { count: question.skippedCount }) }}
       </span>
     </div>
 
@@ -41,15 +44,15 @@ const maxDistributionCount = computed(
         <div class="stats-row">
           <div class="stat">
             <span class="stat-value">{{ question.stats.avg.toFixed(1) }}</span>
-            <span class="stat-label">середнє</span>
+            <span class="stat-label">{{ t("analytics.common.avg") }}</span>
           </div>
           <div class="stat">
             <span class="stat-value">{{ question.stats.min }}</span>
-            <span class="stat-label">мін</span>
+            <span class="stat-label">{{ t("analytics.common.min") }}</span>
           </div>
           <div class="stat">
             <span class="stat-value">{{ question.stats.max }}</span>
-            <span class="stat-label">макс</span>
+            <span class="stat-label">{{ t("analytics.common.max") }}</span>
           </div>
         </div>
       </template>
@@ -67,8 +70,8 @@ const maxDistributionCount = computed(
           />
         </div>
         <div class="bool-legend">
-          <span>Так: {{ question.trueCount ?? 0 }}</span>
-          <span>Ні: {{ question.falseCount ?? 0 }}</span>
+          <span>{{ t("analytics.common.booleanYes", { count: question.trueCount ?? 0 }) }}</span>
+          <span>{{ t("analytics.common.booleanNo", { count: question.falseCount ?? 0 }) }}</span>
         </div>
       </template>
 
@@ -89,7 +92,7 @@ const maxDistributionCount = computed(
         </div>
       </template>
 
-      <p v-else class="no-data">Немає відповідей</p>
+      <p v-else class="no-data">{{ t("analytics.questionCard.noData") }}</p>
     </div>
   </button>
 </template>

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { useI18n } from "vue-i18n";
 import type { ResponseListDto } from "@surveycraft/shared-types";
 
 defineProps<{
@@ -14,16 +15,18 @@ const emit = defineEmits<{
   (e: "update:page", page: number): void;
 }>();
 
-const formatDate = (iso: string) => new Date(iso).toLocaleString("uk-UA");
+const { t, locale } = useI18n();
+
+const formatDate = (iso: string) => new Date(iso).toLocaleString(locale.value);
 </script>
 
 <template>
   <div class="list-panel">
-    <h3 class="list-title">Всі відповіді</h3>
+    <h3 class="list-title">{{ t("analytics.responsesList.title") }}</h3>
 
-    <div v-if="isLoading" class="state-text">Завантаження списку...</div>
-    <div v-else-if="error" class="state-text state-text--error">{{ error }}</div>
-    <div v-else-if="data?.data.length === 0" class="state-text">Немає відповідей</div>
+    <div v-if="isLoading" class="state-text">{{ t("analytics.responsesList.loading") }}</div>
+    <div v-else-if="error" class="state-text state-text--error">{{ t(error) }}</div>
+    <div v-else-if="data?.data.length === 0" class="state-text">{{ t("analytics.responsesList.empty") }}</div>
 
     <div v-else-if="data" class="items">
       <button
@@ -46,16 +49,16 @@ const formatDate = (iso: string) => new Date(iso).toLocaleString("uk-UA");
         :disabled="page === 1"
         @click="emit('update:page', page - 1)"
       >
-        Назад
+        {{ t("analytics.responsesList.back") }}
       </button>
-      <span class="page-label">Сторінка {{ page }}</span>
+      <span class="page-label">{{ t("analytics.responsesList.pageLabel", { page }) }}</span>
       <button
         type="button"
         class="page-btn"
         :disabled="page * data.limit >= data.total"
         @click="emit('update:page', page + 1)"
       >
-        Вперед
+        {{ t("analytics.responsesList.next") }}
       </button>
     </div>
   </div>

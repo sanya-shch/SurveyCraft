@@ -1,0 +1,34 @@
+{
+  "header": {
+    "userLabel": "User",
+    "logoutTitle": "Sign out"
+  },
+  "stats": {
+    "totalForms": "Total forms",
+    "published": "Published",
+    "totalResponses": "Total responses"
+  },
+  "searchPlaceholder": "Search surveys...",
+  "createButton": "Create form",
+  "creating": "Creating...",
+  "newFormTitle": "New survey",
+  "emptyState": {
+    "title": "No forms found",
+    "subtitle": "Create your first survey right now."
+  },
+  "card": {
+    "published": "Published",
+    "draft": "Draft",
+    "noDescription": "No description",
+    "responsesCount_one": "{{count}} response",
+    "responsesCount_other": "{{count}} responses"
+  },
+  "menu": {
+    "copyLink": "Copy link",
+    "analytics": "Response analytics",
+    "unpublish": "Unpublish",
+    "publish": "Publish",
+    "duplicate": "Duplicate",
+    "delete": "Delete"
+  }
+}

@@ -1,0 +1,23 @@
+{
+  "common": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "close": "Close",
+    "back": "Back",
+    "loading": "Loading...",
+    "loadingPage": "Loading page...",
+    "checkingAccess": "Checking access...",
+    "confirm": "Confirm",
+    "copy": "Copy",
+    "copied": "Copied",
+    "required": "Required",
+    "optional": "Optional"
+  },
+  "language": {
+    "uk": "Ukrainian",
+    "en": "English",
+    "switchLabel": "Language"
+  }
+}

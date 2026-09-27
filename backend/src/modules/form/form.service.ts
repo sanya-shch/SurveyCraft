@@ -1,6 +1,7 @@
 import { Prisma } from "@prisma/client";
 import { prisma } from "../../prisma/prisma.js";
 import { AppError } from "../../shared/middleware/errorHandler.js";
+import { ErrorCode } from "@surveycraft/shared-types";
 import { UpdateFormInput, UserFormsDto } from "./form.types.js";
 import { toJson } from "../../shared/utils/helpers.js";
 import { validateConditionGraph } from "@surveycraft/condition-engine";
@@ -44,11 +45,11 @@ export const deleteForm = async (formId: string, userId: string) => {
   });
 
   if (!form) {
-    throw new AppError("Form not found", 404);
+    throw new AppError(ErrorCode.FORM_NOT_FOUND, 404);
   }
 
   if (form.userId !== userId) {
-    throw new AppError("Forbidden", 403);
+    throw new AppError(ErrorCode.FORM_FORBIDDEN, 403);
   }
 
   await prisma.form.delete({
@@ -72,11 +73,11 @@ export const getUserForm = async (formId: string, userId: string) => {
   });
 
   if (!form) {
-    throw new AppError("Form not found", 404);
+    throw new AppError(ErrorCode.FORM_NOT_FOUND, 404);
   }
 
   if (form.userId !== userId) {
-    throw new AppError("Forbidden", 403);
+    throw new AppError(ErrorCode.FORM_FORBIDDEN, 403);
   }
 
   return form;
@@ -93,7 +94,7 @@ export const getFormByShareId = async (shareId: string) => {
   });
 
   if (!form || !form.isPublished) {
-    throw new AppError("Form not available", 404);
+    throw new AppError(ErrorCode.FORM_NOT_AVAILABLE, 404);
   }
 
   return {
@@ -111,8 +112,8 @@ export const updateForm = async (formId: string, userId: string, data: UpdateFor
     include: { questions: true },
   });
 
-  if (!form) throw new AppError("Form not found", 404);
-  if (form.userId !== userId) throw new AppError("Forbidden", 403);
+  if (!form) throw new AppError(ErrorCode.FORM_NOT_FOUND, 404);
+  if (form.userId !== userId) throw new AppError(ErrorCode.FORM_FORBIDDEN, 403);
 
   const existingQuestions = form.questions;
   const incomingQuestions = data.questions;
@@ -131,10 +132,10 @@ export const updateForm = async (formId: string, userId: string, data: UpdateFor
   );
 
   if (!graphValidation.valid) {
-    throw new AppError(
-      `Некоректні умови показу питань: ${graphValidation.errors.map((e) => e.detail).join("; ")}`,
-      400,
-    );
+    // errors - структурований масив { questionId, reason, detail } з
+    // condition-engine; переклад на фронтенді будується з `reason`
+    // (стабільний код), а не з українського `detail`.
+    throw new AppError(ErrorCode.FORM_INVALID_CONDITIONS, 400, graphValidation.errors);
   }
 
   const incomingIds = new Set(withResolvedIds.map((q: any) => q.id));
@@ -202,8 +203,8 @@ export const publishForm = async (formId: string, userId: string) => {
     where: { id: formId },
   });
 
-  if (!form) throw new AppError("Form not found", 404);
-  if (form.userId !== userId) throw new AppError("Forbidden", 403);
+  if (!form) throw new AppError(ErrorCode.FORM_NOT_FOUND, 404);
+  if (form.userId !== userId) throw new AppError(ErrorCode.FORM_FORBIDDEN, 403);
 
   return prisma.form.update({
     where: { id: formId },
@@ -216,8 +217,8 @@ export const unpublishForm = async (formId: string, userId: string) => {
     where: { id: formId },
   });
 
-  if (!form) throw new AppError("Form not found", 404);
-  if (form.userId !== userId) throw new AppError("Forbidden", 403);
+  if (!form) throw new AppError(ErrorCode.FORM_NOT_FOUND, 404);
+  if (form.userId !== userId) throw new AppError(ErrorCode.FORM_FORBIDDEN, 403);
 
   return prisma.form.update({
     where: { id: formId },
@@ -231,8 +232,8 @@ export const duplicateForm = async (formId: string, userId: string) => {
     include: { questions: true },
   });
 
-  if (!form) throw new AppError("Form not found", 404);
-  if (form.userId !== userId) throw new AppError("Forbidden", 403);
+  if (!form) throw new AppError(ErrorCode.FORM_NOT_FOUND, 404);
+  if (form.userId !== userId) throw new AppError(ErrorCode.FORM_FORBIDDEN, 403);
 
   return prisma.$transaction(async (tx) => {
     const newForm = await tx.form.create({

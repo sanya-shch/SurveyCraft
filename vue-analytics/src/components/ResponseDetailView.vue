@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { useI18n } from "vue-i18n";
 import type { ResponseDetailsDto } from "@surveycraft/shared-types";
 
 defineProps<{
@@ -7,18 +8,20 @@ defineProps<{
   error: string | null;
 }>();
 
-const formatDate = (iso: string) => new Date(iso).toLocaleString("uk-UA");
+const { t, locale } = useI18n();
+
+const formatDate = (iso: string) => new Date(iso).toLocaleString(locale.value);
 </script>
 
 <template>
-  <div v-if="isLoading" class="state-card state-card--muted">Завантаження...</div>
-  <div v-else-if="error" class="state-card state-card--error">{{ error }}</div>
+  <div v-if="isLoading" class="state-card state-card--muted">{{ t("analytics.common.loading") }}</div>
+  <div v-else-if="error" class="state-card state-card--error">{{ t(error) }}</div>
 
   <div v-else-if="data" class="detail">
     <div class="detail-header">
       <div>
-        <h3 class="detail-title">Перегляд відповіді</h3>
-        <p class="detail-subtitle">Надіслано: {{ formatDate(data.createdAt) }}</p>
+        <h3 class="detail-title">{{ t("analytics.responseDetail.title") }}</h3>
+        <p class="detail-subtitle">{{ t("analytics.responseDetail.submittedAt", { date: formatDate(data.createdAt) }) }}</p>
       </div>
       <span class="detail-id">ID: {{ data.id }}</span>
     </div>
@@ -27,7 +30,7 @@ const formatDate = (iso: string) => new Date(iso).toLocaleString("uk-UA");
       <div v-for="ans in data.answers" :key="ans.questionId" class="answer-row">
         <label class="answer-label">
           {{ ans.questionText }}
-          <span v-if="ans.questionRequired" class="required-mark" aria-label="обов'язкове питання">*</span>
+          <span v-if="ans.questionRequired" class="required-mark" :aria-label="t('analytics.common.requiredAriaLabel')">*</span>
         </label>
 
         <span v-if="ans.questionDescription" class="answer-description">{{ ans.questionDescription }}</span>

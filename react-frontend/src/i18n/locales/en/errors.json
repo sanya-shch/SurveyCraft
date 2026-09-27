@@ -1,0 +1,44 @@
+{
+  "AUTH_EMAIL_ALREADY_IN_USE": "This email is already registered",
+  "AUTH_INVALID_CREDENTIALS": "Invalid email or password",
+  "AUTH_REFRESH_TOKEN_MISSING": "Your session has expired, please sign in again",
+  "AUTH_REFRESH_TOKEN_INVALID": "Your session has expired, please sign in again",
+  "AUTH_UNAUTHORIZED": "You need to sign in",
+  "AUTH_TOKEN_INVALID": "Your session has expired, please sign in again",
+  "AUTH_USER_NOT_FOUND": "User not found",
+
+  "FORM_NOT_FOUND": "Form not found",
+  "FORM_FORBIDDEN": "You don't have access to this form",
+  "FORM_NOT_AVAILABLE": "This form is not available",
+  "FORM_NOT_PUBLISHED": "This form isn't published yet",
+  "FORM_INVALID_CONDITIONS": "Invalid question display conditions",
+
+  "EXPORT_JOB_NOT_FOUND": "Export job not found",
+  "EXPORT_NOT_READY": "Export isn't ready yet",
+  "EXPORT_FILE_MISSING": "Export file is missing on the server",
+
+  "RESPONSE_VALIDATION_FAILED": "Please check the form for errors",
+
+  "ANALYTICS_QUESTION_NOT_FOUND": "Question not found",
+  "ANALYTICS_UNSUPPORTED_TYPE": "This question type isn't supported",
+  "ANALYTICS_RESPONSE_NOT_FOUND": "Response not found",
+
+  "VALIDATION_EMAIL_REQUIRED": "Email is required",
+  "VALIDATION_EMAIL_INVALID": "Invalid email format",
+  "VALIDATION_PASSWORD_REQUIRED": "Password is required",
+  "VALIDATION_PASSWORD_TOO_SHORT": "Password must be at least 8 characters",
+  "VALIDATION_PASSWORD_NO_LOWERCASE": "Password must contain at least one lowercase letter",
+  "VALIDATION_PASSWORD_NO_UPPERCASE": "Password must contain at least one uppercase letter",
+  "VALIDATION_PASSWORD_NO_DIGIT": "Password must contain at least one digit",
+  "VALIDATION_CONFIRM_PASSWORD_REQUIRED": "Please confirm your password",
+  "VALIDATION_PASSWORDS_DO_NOT_MATCH": "Passwords don't match",
+
+  "VALIDATION_FIELD_REQUIRED": "This field is required",
+  "VALIDATION_FORMAT_INVALID": "Invalid format",
+  "VALIDATION_DATE_INVALID": "Invalid date",
+  "VALIDATION_MUST_BE_ACCEPTED": "This field must be accepted",
+
+  "RATE_LIMITED": "Too many attempts. Please try again later",
+  "INTERNAL_SERVER_ERROR": "Something went wrong. Please try again",
+  "UNKNOWN": "An unknown error occurred"
+}

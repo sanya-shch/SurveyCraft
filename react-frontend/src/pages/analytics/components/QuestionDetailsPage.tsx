@@ -1,4 +1,5 @@
 import { useParams, useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { useQuestionAnalyticsQuery } from "../hooks/useAnalytics";
 import AnalyticsHeader from "./AnalyticsHeader";
 
@@ -6,6 +7,7 @@ export default function QuestionDetailsPage() {
   const { formId, questionId } = useParams<{ formId: string; questionId: string }>();
   const navigate = useNavigate();
 
+  const { t } = useTranslation();
   const { data, isLoading, error } = useQuestionAnalyticsQuery(formId!, questionId!);
 
   if (isLoading) {
@@ -20,14 +22,12 @@ export default function QuestionDetailsPage() {
     return (
       <div className="min-h-screen bg-slate-50 p-8 flex items-center justify-center">
         <div className="text-center bg-white p-6 border rounded-2xl max-w-sm">
-          <p className="text-sm font-semibold text-rose-500">
-            Помилка завантаження детальної аналітики
-          </p>
+          <p className="text-sm font-semibold text-rose-500">{t("analytics.detail.loadError")}</p>
           <button
             onClick={() => navigate(`/forms/${formId}/analytics`)}
             className="mt-4 text-xs font-bold text-indigo-600 underline"
           >
-            Повернутися назад
+            {t("analytics.detail.goBack")}
           </button>
         </div>
       </div>
@@ -40,7 +40,9 @@ export default function QuestionDetailsPage() {
     <div className="min-h-screen bg-slate-50 flex flex-col">
       <AnalyticsHeader
         formId={formId}
-        currentBreadcrumb={question.text || `Питання ID: ${question.id.slice(-6)}`}
+        currentBreadcrumb={
+          question.text || t("analytics.detail.questionIdFallback", { id: question.id.slice(-6) })
+        }
       />
 
       <main className="flex-1 max-w-3xl w-full mx-auto py-8 px-4 sm:px-6">
@@ -48,18 +50,18 @@ export default function QuestionDetailsPage() {
           <div className="border-b pb-4 border-slate-200 flex justify-between items-start gap-4">
             <div>
               <span className="inline-flex items-center text-[10px] font-black px-2 py-0.5 rounded-md bg-slate-100 text-slate-500 uppercase tracking-wider mb-2">
-                Тип: {question.type}
+                {t("analytics.detail.typeLabel", { type: question.type })}
               </span>
               <h1 className="text-xl font-bold text-slate-900">{question.text}</h1>
 
               <p className="text-sm text-slate-500 mt-2">
-                {question.description || "Питання без опису"}
+                {question.description || t("analytics.detail.noDescription")}
               </p>
             </div>
 
             <div className="text-right shrink-0">
               <span className="text-[10px] font-bold text-slate-400 uppercase block">
-                Відповідей
+                {t("analytics.detail.responsesLabel")}
               </span>
               <span className="text-xl font-black text-slate-800">{totalAnswers}</span>
             </div>
@@ -68,7 +70,7 @@ export default function QuestionDetailsPage() {
           {(question.type === "TEXT" || question.type === "DATE") && answers && (
             <div className="space-y-3">
               <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider">
-                Усі відповіді:
+                {t("analytics.detail.allAnswers")}
               </h3>
               <div className="flex flex-col gap-2 max-h-[500px] overflow-y-auto pr-1">
                 {answers.map((ans, idx) => (
@@ -88,18 +90,22 @@ export default function QuestionDetailsPage() {
               <div className="grid grid-cols-3 gap-4 bg-slate-50 p-4 rounded-xl border">
                 <div className="text-center">
                   <span className="text-xs font-bold text-slate-400 uppercase">
-                    Середнє значення
+                    {t("analytics.detail.avgValue")}
                   </span>
                   <p className="text-2xl font-black text-indigo-600 mt-1">
                     {stats?.avg.toFixed(2)}
                   </p>
                 </div>
                 <div className="text-center border-x">
-                  <span className="text-xs font-bold text-slate-400 uppercase">Мінімум</span>
+                  <span className="text-xs font-bold text-slate-400 uppercase">
+                    {t("analytics.detail.min")}
+                  </span>
                   <p className="text-2xl font-black text-slate-700 mt-1">{stats?.min}</p>
                 </div>
                 <div className="text-center">
-                  <span className="text-xs font-bold text-slate-400 uppercase">Максимум</span>
+                  <span className="text-xs font-bold text-slate-400 uppercase">
+                    {t("analytics.detail.max")}
+                  </span>
                   <p className="text-2xl font-black text-slate-700 mt-1">{stats?.max}</p>
                 </div>
               </div>
@@ -107,7 +113,7 @@ export default function QuestionDetailsPage() {
               {distribution && (
                 <div className="space-y-3">
                   <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider">
-                    Розподіл за частотою:
+                    {t("analytics.detail.distribution")}
                   </h3>
                   <div className="space-y-2">
                     {distribution.map((dist, idx) => {
@@ -115,7 +121,7 @@ export default function QuestionDetailsPage() {
                       return (
                         <div key={idx} className="flex items-center gap-4 text-xs font-semibold">
                           <span className="w-12 text-slate-500 font-mono text-right">
-                            Число {dist.value}:
+                            {t("analytics.detail.numberLabel", { value: dist.value })}
                           </span>
                           <div className="flex-1 h-3 bg-slate-100 rounded-md overflow-hidden">
                             <div
@@ -139,7 +145,7 @@ export default function QuestionDetailsPage() {
             distribution && (
               <div className="space-y-4">
                 <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider">
-                  Рейтинг вибору опцій:
+                  {t("analytics.detail.optionsRanking")}
                 </h3>
 
                 <div className="flex flex-col gap-3">
@@ -153,7 +159,8 @@ export default function QuestionDetailsPage() {
                       >
                         <div className="flex justify-between items-center text-sm font-bold text-slate-700">
                           <span className="truncate">
-                            {dist.text} (ID: {dist.optionId})
+                            {dist.text}{" "}
+                            {t("analytics.detail.optionIdSuffix", { id: dist.optionId })}
                           </span>
                           <span className="text-indigo-600 bg-white border px-2.5 py-0.5 rounded-lg text-xs shadow-sm">
                             {dist.count}
@@ -174,12 +181,14 @@ export default function QuestionDetailsPage() {
 
           {question.type === "BOOLEAN" && (
             <div className="space-y-4">
-              <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Опції:</h3>
+              <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider">
+                {t("analytics.detail.options")}
+              </h3>
               <div className="flex flex-col gap-3">
                 <div className="bg-emerald-50/40 border border-emerald-100 rounded-xl p-4 flex items-center justify-between">
                   <div className="space-y-1 flex-1 pr-6">
                     <span className="text-sm font-bold text-emerald-800">
-                      Позитивна відповідь (Так / True)
+                      {t("analytics.detail.booleanTrue")}
                     </span>
                     <div className="w-full h-2 bg-emerald-100 rounded-full overflow-hidden">
                       <div
@@ -198,7 +207,7 @@ export default function QuestionDetailsPage() {
                 <div className="bg-rose-50/40 border border-rose-100 rounded-xl p-4 flex items-center justify-between">
                   <div className="space-y-1 flex-1 pr-6">
                     <span className="text-sm font-bold text-rose-800">
-                      Негативна відповідь (Ні / False)
+                      {t("analytics.detail.booleanFalse")}
                     </span>
                     <div className="w-full h-2 bg-rose-100 rounded-full overflow-hidden">
                       <div

@@ -6,7 +6,7 @@ const ACTIVE_STATUSES = new Set<ExportJobDto["status"]>(["PENDING", "PROCESSING"
 const POLL_INTERVAL_MS = 2000;
 
 export const getExportErrorMessage = (e: unknown): string =>
-  e instanceof ApiError ? "Не вдалося завантажити список експортів" : "Помилка мережі";
+  e instanceof ApiError ? "analytics.errors.exportListLoadFailed" : "analytics.errors.networkError";
 
 export function useExportJobs(apiBaseUrl: string, formId: string) {
   const jobs = shallowRef<ExportJobDto[]>([]);

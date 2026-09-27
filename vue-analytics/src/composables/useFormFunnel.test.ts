@@ -13,13 +13,13 @@ const mockedApiGet = vi.mocked(apiGet);
 
 describe("getFunnelErrorMessage (чиста функція, без async/mock)", () => {
   it("ApiError -> повідомлення про funnel-аналітику", () => {
-    expect(getFunnelErrorMessage(new ApiError(500, "x"))).toBe(
-      "Не вдалося завантажити funnel-аналітику",
-    );
+    expect(getFunnelErrorMessage(new ApiError(500, "x"))).toBe("analytics.errors.funnelLoadFailed");
   });
 
   it("не-ApiError -> 'Помилка мережі'", () => {
-    expect(getFunnelErrorMessage(new TypeError("network down"))).toBe("Помилка мережі");
+    expect(getFunnelErrorMessage(new TypeError("network down"))).toBe(
+      "analytics.errors.networkError",
+    );
   });
 });
 

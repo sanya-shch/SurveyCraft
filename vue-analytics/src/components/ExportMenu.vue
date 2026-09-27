@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref } from "vue";
+import { useI18n } from "vue-i18n";
 import type { ExportFormat, ExportJobDto } from "@surveycraft/shared-types";
 import { useExportJobs } from "../composables/useExportJobs";
 
@@ -8,6 +9,8 @@ const props = defineProps<{
   formId: string;
 }>();
 
+const { t } = useI18n();
+
 const { jobs, isCreating, createExport, downloadExport } = useExportJobs(props.apiBaseUrl, props.formId);
 
 const isOpen = ref(false);
@@ -15,12 +18,12 @@ const menuRef = ref<HTMLElement | null>(null);
 const createError = ref(false);
 
 const FORMAT_LABELS: Record<ExportFormat, string> = { CSV: "CSV", EXCEL: "Excel", PDF: "PDF" };
-const STATUS_META: Record<ExportJobDto["status"], { label: string; className: string }> = {
-  PENDING: { label: "У черзі", className: "status-pending" },
-  PROCESSING: { label: "Генерується...", className: "status-processing" },
-  COMPLETED: { label: "Готово", className: "status-completed" },
-  FAILED: { label: "Помилка", className: "status-failed" },
-};
+const statusMeta = computed<Record<ExportJobDto["status"], { label: string; className: string }>>(() => ({
+  PENDING: { label: t("analytics.export.status.pending"), className: "status-pending" },
+  PROCESSING: { label: t("analytics.export.status.processing"), className: "status-processing" },
+  COMPLETED: { label: t("analytics.export.status.completed"), className: "status-completed" },
+  FAILED: { label: t("analytics.export.status.failed"), className: "status-failed" },
+}));
 
 const recentJobs = computed(() => jobs.value.slice(0, 5));
 
@@ -53,11 +56,11 @@ onUnmounted(() => document.removeEventListener("mousedown", handleClickOutside))
           d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3"
         />
       </svg>
-      Експорт
+      {{ t("analytics.export.trigger") }}
     </button>
 
     <div v-if="isOpen" class="dropdown">
-      <p class="section-label">Новий експорт</p>
+      <p class="section-label">{{ t("analytics.export.newExport") }}</p>
       <div class="format-grid">
         <button
           v-for="format in (Object.keys(FORMAT_LABELS) as ExportFormat[])"
@@ -71,13 +74,13 @@ onUnmounted(() => document.removeEventListener("mousedown", handleClickOutside))
         </button>
       </div>
 
-      <p v-if="createError" class="error-text">Не вдалося поставити завдання в чергу. Спробуйте ще раз.</p>
+      <p v-if="createError" class="error-text">{{ t("analytics.export.createError") }}</p>
 
       <hr class="divider" />
 
-      <p class="section-label">Історія</p>
+      <p class="section-label">{{ t("analytics.export.history") }}</p>
 
-      <p v-if="recentJobs.length === 0" class="empty-text">Ще не було жодного експорту</p>
+      <p v-if="recentJobs.length === 0" class="empty-text">{{ t("analytics.export.noHistory") }}</p>
       <div v-else class="history-list">
         <div v-for="job in recentJobs" :key="job.id" class="history-row">
           <div class="history-info">
@@ -107,8 +110,8 @@ onUnmounted(() => document.removeEventListener("mousedown", handleClickOutside))
 
             <div class="history-text">
               <p class="history-format">{{ FORMAT_LABELS[job.format] }}</p>
-              <p class="history-status" :class="STATUS_META[job.status].className">
-                {{ job.status === "FAILED" && job.error ? job.error : STATUS_META[job.status].label }}
+              <p class="history-status" :class="statusMeta[job.status].className">
+                {{ job.status === "FAILED" && job.error ? job.error : statusMeta[job.status].label }}
               </p>
             </div>
           </div>
@@ -117,8 +120,8 @@ onUnmounted(() => document.removeEventListener("mousedown", handleClickOutside))
             v-if="job.status === 'COMPLETED'"
             type="button"
             class="download-btn"
-            aria-label="Завантажити"
-            title="Завантажити"
+            :aria-label="t('analytics.export.download')"
+            :title="t('analytics.export.download')"
             @click="downloadExport(job)"
           >
             <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">

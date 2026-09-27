@@ -7,6 +7,7 @@ import {
   hashRefreshToken,
 } from "../../shared/utils/jwt.js";
 import { AppError } from "../../shared/middleware/errorHandler.js";
+import { ErrorCode } from "@surveycraft/shared-types";
 
 type TokenPair = {
   accessToken: string;
@@ -51,7 +52,7 @@ export const registerUser = async (email: string, password: string) => {
     const prismaError = error as Prisma.PrismaClientKnownRequestError;
 
     if (prismaError.code === "P2002") {
-      throw new AppError("Email already in use", 409);
+      throw new AppError(ErrorCode.AUTH_EMAIL_ALREADY_IN_USE, 409);
     }
 
     throw error;
@@ -74,13 +75,13 @@ export const loginHandler = async (email: string, password: string) => {
   });
 
   if (!user) {
-    throw new AppError("Invalid credentials", 401);
+    throw new AppError(ErrorCode.AUTH_INVALID_CREDENTIALS, 401);
   }
 
   const isValid = await bcrypt.compare(password, user.password);
 
   if (!isValid) {
-    throw new AppError("Invalid credentials", 401);
+    throw new AppError(ErrorCode.AUTH_INVALID_CREDENTIALS, 401);
   }
 
   const tokens = await issueTokenPair(user.id);
@@ -102,14 +103,14 @@ export const loginHandler = async (email: string, password: string) => {
  */
 export const refreshAccessToken = async (refreshToken: string | undefined) => {
   if (!refreshToken) {
-    throw new AppError("Refresh token is missing", 401);
+    throw new AppError(ErrorCode.AUTH_REFRESH_TOKEN_MISSING, 401);
   }
 
   const tokenHash = hashRefreshToken(refreshToken);
   const stored = await prisma.refreshToken.findUnique({ where: { tokenHash } });
 
   if (!stored || stored.revokedAt || stored.expiresAt < new Date()) {
-    throw new AppError("Invalid refresh token", 401);
+    throw new AppError(ErrorCode.AUTH_REFRESH_TOKEN_INVALID, 401);
   }
 
   await prisma.refreshToken.update({

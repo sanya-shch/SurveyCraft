@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { ErrorCode } from "@surveycraft/shared-types";
 
 vi.mock("../../prisma/prisma.js", () => ({
   prisma: {
@@ -51,7 +52,7 @@ describe("submitResponse", () => {
 
     await expect(submitResponse(SHARE_ID, {})).rejects.toMatchObject({
       statusCode: 400,
-      message: "Form is not published",
+      message: ErrorCode.FORM_NOT_PUBLISHED,
     });
   });
 
@@ -60,7 +61,7 @@ describe("submitResponse", () => {
 
     await expect(submitResponse(SHARE_ID, { "q-name": "" })).rejects.toMatchObject({
       statusCode: 400,
-      message: "Validation failed",
+      message: ErrorCode.RESPONSE_VALIDATION_FAILED,
       errors: [{ field: "q-name", message: expect.any(String) }],
     });
     expect(prisma.response.create).not.toHaveBeenCalled();

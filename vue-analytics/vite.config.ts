@@ -10,6 +10,7 @@ export default defineConfig({
       filename: "remoteEntry.js",
       exposes: {
         "./AnalyticsApp": "./src/AnalyticsApp.vue",
+        "./i18n": "./src/i18n/index.ts",
       },
       shared: ["vue"],
     }),

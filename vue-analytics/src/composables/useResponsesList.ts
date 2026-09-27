@@ -5,7 +5,9 @@ import { apiGet, ApiError } from "../api/client";
 const PAGE_SIZE = 10;
 
 export const getResponsesListErrorMessage = (e: unknown): string =>
-  e instanceof ApiError ? "Не вдалося завантажити відповіді" : "Помилка мережі";
+  e instanceof ApiError
+    ? "analytics.errors.responsesListLoadFailed"
+    : "analytics.errors.networkError";
 
 export function useResponsesList(apiBaseUrl: string, formId: string) {
   const data = shallowRef<ResponseListDto | null>(null);

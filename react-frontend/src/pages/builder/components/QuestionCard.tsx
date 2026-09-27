@@ -1,5 +1,6 @@
 import React from "react";
 import { type DraggableProvidedDragHandleProps } from "@hello-pangea/dnd";
+import { useTranslation } from "react-i18next";
 import { type Question } from "../../../types/formBuilder";
 import {
   choiceMultiIcon,
@@ -9,6 +10,7 @@ import {
   toggleIcon,
 } from "../../../components/ui/icons";
 import { ErrorInfo } from "../../../components/ui/ErrorInfo";
+import { QUESTION_TYPE_LABEL_KEYS } from "../../../constants";
 
 interface QuestionCardProps {
   question: Question;
@@ -33,6 +35,8 @@ export default function QuestionCard({
   children,
   error,
 }: QuestionCardProps) {
+  const { t } = useTranslation();
+
   return (
     <div
       ref={innerRef}
@@ -42,8 +46,8 @@ export default function QuestionCard({
         <div
           {...dragHandleProps}
           className="mt-2 text-slate-300 hover:text-slate-500 cursor-grab active:cursor-grabbing p-1 rounded-md hover:bg-slate-50 transition-colors select-none text-xl tracking-tighter"
-          title="Перетягнути питання"
-          aria-label="Перетягнути питання"
+          title={t("builder.questionCard.dragHandle")}
+          aria-label={t("builder.questionCard.dragHandle")}
         >
           ⣿
         </div>
@@ -55,8 +59,8 @@ export default function QuestionCard({
               type="text"
               value={question.text}
               onChange={(e) => onUpdate({ text: e.target.value })}
-              placeholder="Запитання без назви"
-              aria-label="Текст питання"
+              placeholder={t("builder.questionCard.textPlaceholder")}
+              aria-label={t("builder.questionCard.textAriaLabel")}
               className="w-full text-base font-semibold text-slate-800 placeholder:text-slate-300 bg-transparent border-b border-transparent hover:border-slate-100 focus:border-indigo-500 focus:outline-none pb-1 transition-colors"
             />
           </div>
@@ -65,8 +69,8 @@ export default function QuestionCard({
             type="text"
             value={question.description || ""}
             onChange={(e) => onUpdate({ description: e.target.value })}
-            placeholder="Додати опис (необов'язково)..."
-            aria-label="Опис питання (необов'язково)"
+            placeholder={t("builder.questionCard.descriptionPlaceholder")}
+            aria-label={t("builder.questionCard.descriptionAriaLabel")}
             className="w-full text-xs text-slate-500 placeholder:text-slate-300 bg-transparent border-b border-transparent hover:border-slate-100 focus:border-indigo-500 focus:outline-none pb-1 transition-colors"
           />
 
@@ -79,7 +83,7 @@ export default function QuestionCard({
           children
         ) : (
           <div className="text-xs text-slate-400 italic">
-            Конфігурація для типу {question.type} буде тут...
+            {t("builder.questionCard.configPlaceholder", { type: question.type })}
           </div>
         )}
       </div>
@@ -87,18 +91,42 @@ export default function QuestionCard({
       <div className="mt-6 flex flex-wrap items-center justify-between gap-4 border-t border-slate-100 pt-4 opacity-40 group-hover:opacity-100 focus-within:opacity-100 transition-opacity duration-200">
         <div className="flex items-center gap-2">
           <span className="inline-flex items-center gap-1.5 rounded-lg bg-indigo-50 px-2.5 py-1 text-xs font-semibold text-indigo-700 ring-1 ring-inset ring-indigo-700/10">
-            {question.type === "TEXT" && <>{textIcon} Текстове поле</>}
-            {question.type === "NUMBER" && <>{numberIcon} Числове поле</>}
-            {question.type === "CHOICE_SINGLE" && <>{choiceSingleIcon} Один вибір</>}
-            {question.type === "CHOICE_MULTI" && <>{choiceMultiIcon} Кілька виборів</>}
-            {question.type === "BOOLEAN" && <>{toggleIcon} Перемикач</>}
-            {question.type === "DATE" && <>{textIcon} Вибір дати</>}
+            {question.type === "TEXT" && (
+              <>
+                {textIcon} {t(QUESTION_TYPE_LABEL_KEYS.TEXT)}
+              </>
+            )}
+            {question.type === "NUMBER" && (
+              <>
+                {numberIcon} {t(QUESTION_TYPE_LABEL_KEYS.NUMBER)}
+              </>
+            )}
+            {question.type === "CHOICE_SINGLE" && (
+              <>
+                {choiceSingleIcon} {t(QUESTION_TYPE_LABEL_KEYS.CHOICE_SINGLE)}
+              </>
+            )}
+            {question.type === "CHOICE_MULTI" && (
+              <>
+                {choiceMultiIcon} {t(QUESTION_TYPE_LABEL_KEYS.CHOICE_MULTI)}
+              </>
+            )}
+            {question.type === "BOOLEAN" && (
+              <>
+                {toggleIcon} {t("builder.questionCard.toggleBadge")}
+              </>
+            )}
+            {question.type === "DATE" && (
+              <>
+                {textIcon} {t(QUESTION_TYPE_LABEL_KEYS.DATE)}
+              </>
+            )}
           </span>
         </div>
 
         <div className="flex items-center gap-1.5 sm:gap-3 text-slate-400">
           <label className="flex items-center gap-2 cursor-pointer pr-2 border-r border-slate-200 select-none">
-            <span className="text-xs font-medium text-slate-500">Обов'язкове</span>
+            <span className="text-xs font-medium text-slate-500">{t("common.required")}</span>
             <div className="relative">
               <input
                 type="checkbox"
@@ -114,8 +142,8 @@ export default function QuestionCard({
             type="button"
             onClick={onDuplicate}
             className="rounded-lg p-1.5 hover:bg-slate-50 hover:text-slate-600 transition-colors cursor-pointer"
-            aria-label="Дублювати питання"
-            title="Дублювати питання"
+            aria-label={t("builder.questionCard.duplicate")}
+            title={t("builder.questionCard.duplicate")}
           >
             <svg
               aria-hidden="true"
@@ -137,8 +165,8 @@ export default function QuestionCard({
             type="button"
             onClick={onDelete}
             className="rounded-lg p-1.5 hover:bg-rose-50 hover:text-rose-600 transition-colors cursor-pointer"
-            aria-label="Видалити питання"
-            title="Видалити питання"
+            aria-label={t("builder.questionCard.delete")}
+            title={t("builder.questionCard.delete")}
           >
             <svg
               aria-hidden="true"

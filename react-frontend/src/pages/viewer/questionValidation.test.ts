@@ -18,10 +18,12 @@ const baseQuestion = (overrides: Partial<Question>): Question => ({
   ...overrides,
 });
 
+const REQUIRED_KEY = "errors.VALIDATION_FIELD_REQUIRED";
+
 describe("validateField", () => {
   it("вимагає значення для required-поля", () => {
     const q = baseQuestion({ required: true });
-    expect(validateField(q, "")).toBe("Це поле є обов'язковим для заповнення");
+    expect(validateField(q, "")).toEqual({ key: REQUIRED_KEY });
   });
 
   it("необов'язкове порожнє поле - без помилки", () => {
@@ -31,45 +33,60 @@ describe("validateField", () => {
 
   it("required CHOICE_MULTI: порожній масив вважається порожнім значенням", () => {
     const q = baseQuestion({ type: "CHOICE_MULTI", required: true });
-    expect(validateField(q, [])).toBe("Це поле є обов'язковим для заповнення");
+    expect(validateField(q, [])).toEqual({ key: REQUIRED_KEY });
     expect(validateField(q, ["opt1"])).toBeNull();
   });
 
   it("NUMBER: перевіряє min/max з config", () => {
     const q = baseQuestion({ type: "NUMBER", config: { min: 10, max: 20 } });
-    expect(validateField(q, 5)).toBe("Значення має бути не менше 10");
-    expect(validateField(q, 25)).toBe("Значення має бути не більше 20");
+    expect(validateField(q, 5)).toEqual({
+      key: "viewer.validation.numberMin",
+      params: { min: 10 },
+    });
+    expect(validateField(q, 25)).toEqual({
+      key: "viewer.validation.numberMax",
+      params: { max: 20 },
+    });
     expect(validateField(q, 15)).toBeNull();
   });
 
   it("TEXT: перевіряє minLength/maxLength", () => {
     const q = baseQuestion({ type: "TEXT", config: { minLength: 3, maxLength: 5 } });
-    expect(validateField(q, "ab")).toBe("Мінімальна кількість символів: 3");
-    expect(validateField(q, "abcdef")).toBe("Максимальна кількість символів: 5");
+    expect(validateField(q, "ab")).toEqual({
+      key: "viewer.validation.textMinLength",
+      params: { minLength: 3 },
+    });
+    expect(validateField(q, "abcdef")).toEqual({
+      key: "viewer.validation.textMaxLength",
+      params: { maxLength: 5 },
+    });
     expect(validateField(q, "abc")).toBeNull();
   });
 
   it("TEXT email variant: відхиляє некоректний email", () => {
     const q = baseQuestion({ type: "TEXT", config: { variant: "email" } });
-    expect(validateField(q, "not-an-email")).toBe("Введіть коректну електронну адресу");
+    expect(validateField(q, "not-an-email")).toEqual({ key: "errors.VALIDATION_EMAIL_INVALID" });
     expect(validateField(q, "user@example.com")).toBeNull();
   });
 
   it("TEXT name variant: приймає українські літери й дефіс, відхиляє цифри", () => {
     const q = baseQuestion({ type: "TEXT", config: { variant: "name" } });
     expect(validateField(q, "Олександр-Петро")).toBeNull();
-    expect(validateField(q, "Ivan123")).toBe("Ім'я може містити лише літери, пробіли або дефіси");
+    expect(validateField(q, "Ivan123")).toEqual({ key: "viewer.validation.nameInvalid" });
   });
 
   it("TEXT з кастомним pattern", () => {
     const q = baseQuestion({ type: "TEXT", config: { pattern: "^[0-9]{5}$" } });
     expect(validateField(q, "12345")).toBeNull();
-    expect(validateField(q, "abc")).toBe("Невірний формат вводу");
+    expect(validateField(q, "abc")).toEqual({ key: "errors.VALIDATION_FORMAT_INVALID" });
   });
 
   it("значення обрізається перед перевіркою minLength (пробіли не рахуються)", () => {
     const q = baseQuestion({ type: "TEXT", config: { minLength: 3 } });
-    expect(validateField(q, "  ab  ")).toBe("Мінімальна кількість символів: 3");
+    expect(validateField(q, "  ab  ")).toEqual({
+      key: "viewer.validation.textMinLength",
+      params: { minLength: 3 },
+    });
   });
 });
 
@@ -119,7 +136,7 @@ describe("validateAll", () => {
       baseQuestion({ id: "q2", required: false }),
     ];
     const errors = validateAll(questions, { q1: "", q2: "" });
-    expect(errors).toEqual({ q1: "Це поле є обов'язковим для заповнення" });
+    expect(errors).toEqual({ q1: { key: REQUIRED_KEY } });
   });
 
   it("порожній список питань - порожня мапа помилок", () => {
@@ -129,7 +146,7 @@ describe("validateAll", () => {
   it("використовує fallback-ключ q-{index}, якщо у питання немає id", () => {
     const questions = [baseQuestion({ id: undefined, required: true })];
     const errors = validateAll(questions, {});
-    expect(errors).toEqual({ "q-0": "Це поле є обов'язковим для заповнення" });
+    expect(errors).toEqual({ "q-0": { key: REQUIRED_KEY } });
   });
 });
 

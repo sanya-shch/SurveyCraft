@@ -13,28 +13,30 @@ describe("getAnalyticsErrorMessage (чиста функція, без async/mock
   it("403 -> дружнє повідомлення про відсутність доступу", async () => {
     const { getAnalyticsErrorMessage } = await import("./useFormAnalytics");
     expect(getAnalyticsErrorMessage(new ApiError(403, "forbidden"))).toBe(
-      "Немає доступу до аналітики цієї форми",
+      "analytics.errors.accessDenied",
     );
   });
 
   it("404 -> 'Форму не знайдено'", async () => {
     const { getAnalyticsErrorMessage } = await import("./useFormAnalytics");
-    expect(getAnalyticsErrorMessage(new ApiError(404, "not found"))).toBe("Форму не знайдено");
+    expect(getAnalyticsErrorMessage(new ApiError(404, "not found"))).toBe(
+      "analytics.errors.formNotFound",
+    );
   });
 
   it("інший статус ApiError -> загальне повідомлення", async () => {
     const { getAnalyticsErrorMessage } = await import("./useFormAnalytics");
     expect(getAnalyticsErrorMessage(new ApiError(500, "server error"))).toBe(
-      "Не вдалося завантажити аналітику",
+      "analytics.errors.loadFailed",
     );
   });
 
   it("не-ApiError виняток -> те саме загальне повідомлення", async () => {
     const { getAnalyticsErrorMessage } = await import("./useFormAnalytics");
     expect(getAnalyticsErrorMessage(new TypeError("network down"))).toBe(
-      "Не вдалося завантажити аналітику",
+      "analytics.errors.loadFailed",
     );
-    expect(getAnalyticsErrorMessage("не Error взагалі")).toBe("Не вдалося завантажити аналітику");
+    expect(getAnalyticsErrorMessage("не Error взагалі")).toBe("analytics.errors.loadFailed");
   });
 });
 

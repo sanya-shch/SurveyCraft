@@ -12,13 +12,15 @@ describe("getQuestionErrorMessage (чиста функція, без async/mock)
   it("ApiError -> повідомлення про деталі питання", async () => {
     const { getQuestionErrorMessage } = await import("./useQuestionAnalytics");
     expect(getQuestionErrorMessage(new ApiError(404, "x"))).toBe(
-      "Не вдалося завантажити деталі питання",
+      "analytics.errors.questionDetailsLoadFailed",
     );
   });
 
   it("не-ApiError -> 'Помилка мережі'", async () => {
     const { getQuestionErrorMessage } = await import("./useQuestionAnalytics");
-    expect(getQuestionErrorMessage(new TypeError("network down"))).toBe("Помилка мережі");
+    expect(getQuestionErrorMessage(new TypeError("network down"))).toBe(
+      "analytics.errors.networkError",
+    );
   });
 });
 

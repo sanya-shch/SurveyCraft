@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { ErrorCode } from "@surveycraft/shared-types";
 
 const { prisma } = await import("../../prisma/prisma.js");
 const {
@@ -185,7 +186,7 @@ describe("getQuestionAnalytics", () => {
 
     await expect(getQuestionAnalytics(FORM_ID, "q-nonexistent", OWNER_ID)).rejects.toMatchObject({
       statusCode: 404,
-      message: "Question not found",
+      message: ErrorCode.ANALYTICS_QUESTION_NOT_FOUND,
     });
   });
 

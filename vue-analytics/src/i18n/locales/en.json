@@ -1,0 +1,93 @@
+{
+  "analytics": {
+    "common": {
+      "untitledQuestion": "Untitled question",
+      "loading": "Loading...",
+      "avg": "avg",
+      "min": "min",
+      "max": "max",
+      "booleanYes": "Yes: {count}",
+      "booleanNo": "No: {count}",
+      "requiredAriaLabel": "required question"
+    },
+    "errors": {
+      "accessDenied": "You don't have access to this form's analytics",
+      "formNotFound": "Form not found",
+      "loadFailed": "Failed to load analytics",
+      "networkError": "Network error",
+      "funnelLoadFailed": "Failed to load funnel analytics",
+      "pathsLoadFailed": "Failed to load response paths",
+      "questionDetailsLoadFailed": "Failed to load question details",
+      "responseDetailLoadFailed": "Failed to load response details",
+      "responsesListLoadFailed": "Failed to load responses",
+      "exportListLoadFailed": "Failed to load the export list"
+    },
+    "header": {
+      "title": "Form analytics",
+      "subtitle": "Vue 3 · loaded via Module Federation",
+      "totalResponses": "{count} responses"
+    },
+    "tabs": {
+      "overview": "Overview",
+      "responses": "Raw responses"
+    },
+    "funnel": {
+      "sectionTitle": "Completion funnel",
+      "loading": "Loading funnel...",
+      "attempts": "attempts",
+      "completed": "completed ({completions} of {total})",
+      "hint": "Unlike \"Response paths\" below, this includes abandoned attempts (autosave drafts), not just completed responses - this is the true funnel.",
+      "empty": "No one has started this form yet.",
+      "dropOff": "-{count} dropped off at this step"
+    },
+    "analyticsSection": {
+      "loading": "Loading analytics...",
+      "emptyState": "There are no completed responses for this form yet."
+    },
+    "paths": {
+      "sectionTitle": "Response paths",
+      "sectionHint": "Popularity of branches among completed responses. For a funnel that includes abandoned attempts, see the \"Completion funnel\" section above.",
+      "loading": "Loading paths...",
+      "start": "Start ({count})",
+      "ofTotal": "{count} of {total} ({percent}%)",
+      "hint": "Curved lines mark branches where an intermediate question was hidden by a condition (the path skips it directly)."
+    },
+    "questionCard": {
+      "hiddenByCondition": "hidden by condition: {count}",
+      "shownButSkipped": "shown but skipped: {count}",
+      "noData": "No responses yet"
+    },
+    "detailPanel": {
+      "close": "Close details panel",
+      "totalAnswers": "Answers: {count}",
+      "allAnswers": "All answers:"
+    },
+    "responsesList": {
+      "title": "All responses",
+      "loading": "Loading responses...",
+      "empty": "No responses yet",
+      "back": "Back",
+      "pageLabel": "Page {page}",
+      "next": "Next"
+    },
+    "responseDetail": {
+      "placeholder": "Select a response from the list on the left to view its details",
+      "title": "Response details",
+      "submittedAt": "Submitted: {date}"
+    },
+    "export": {
+      "trigger": "Export",
+      "newExport": "New export",
+      "createError": "Failed to queue the export job. Please try again.",
+      "history": "History",
+      "noHistory": "No exports yet",
+      "download": "Download",
+      "status": {
+        "pending": "Queued",
+        "processing": "Generating...",
+        "completed": "Ready",
+        "failed": "Failed"
+      }
+    }
+  }
+}

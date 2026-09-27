@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { Question } from "../../shared/types/questions.js";
+import { ErrorCode } from "@surveycraft/shared-types";
 
 export const buildResponseSchema = (questions: unknown, visibleQuestionIds?: Set<string>) => {
   const shape: Record<string, z.ZodTypeAny> = {};
@@ -9,10 +10,10 @@ export const buildResponseSchema = (questions: unknown, visibleQuestionIds?: Set
 
     switch (q.type) {
       case "TEXT": {
-        schema = z.string().min(1, "This field is required");
+        schema = z.string().min(1, ErrorCode.VALIDATION_FIELD_REQUIRED);
 
         if (q.config?.variant === "email") {
-          schema = schema.email("Invalid email");
+          schema = schema.email(ErrorCode.VALIDATION_EMAIL_INVALID);
         }
 
         if (q.config?.minLength) {
@@ -24,7 +25,7 @@ export const buildResponseSchema = (questions: unknown, visibleQuestionIds?: Set
         }
 
         if (q.config?.pattern) {
-          schema = schema.regex(new RegExp(q.config.pattern), "Invalid format");
+          schema = schema.regex(new RegExp(q.config.pattern), ErrorCode.VALIDATION_FORMAT_INVALID);
         }
 
         break;
@@ -48,14 +49,16 @@ export const buildResponseSchema = (questions: unknown, visibleQuestionIds?: Set
         schema = z.boolean();
 
         if (q.required) {
-          schema = schema.refine((val) => val === true, "This field must be accepted");
+          schema = schema.refine((val) => val === true, ErrorCode.VALIDATION_MUST_BE_ACCEPTED);
         }
 
         break;
       }
 
       case "DATE": {
-        schema = z.string().refine((val) => !isNaN(Date.parse(val)), "Invalid date");
+        schema = z
+          .string()
+          .refine((val) => !isNaN(Date.parse(val)), ErrorCode.VALIDATION_DATE_INVALID);
         break;
       }
 

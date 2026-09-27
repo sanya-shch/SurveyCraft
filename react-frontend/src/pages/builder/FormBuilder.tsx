@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { DragDropContext, Droppable, Draggable, type DropResult } from "@hello-pangea/dnd";
 import { useQuery, useMutation } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 import { useFormBuilder } from "./hooks/useFormBuilder";
 import { type QuestionType } from "../../types/formBuilder";
 import { formsApi } from "../../api/forms";
@@ -23,6 +24,7 @@ export default function FormBuilder() {
   const { formId } = useParams<{ formId: string }>();
   const navigate = useNavigate();
   const [isLeaveModalOpen, setIsLeaveModalOpen] = useState(false);
+  const { t } = useTranslation();
 
   const {
     form,
@@ -107,10 +109,10 @@ export default function FormBuilder() {
     },
     onSuccess: () => {
       resetDirty();
-      alert("Форму успішно збережено!");
+      alert(t("builder.saveSuccess"));
     },
     onError: () => {
-      alert("Помилка при збереженні форми.");
+      alert(t("builder.saveError"));
     },
   });
 
@@ -141,20 +143,8 @@ export default function FormBuilder() {
     );
   }
 
-  // const validateForm = (formData: typeof form): string | null => {
-  //   if (!formData.title.trim()) {
-  //     return "Назва форми є обов'язковою.";
-  //   }
-
-  //   for (let i = 0; i < formData.questions.length; i++) {
-  //     const question = formData.questions[i];
-  //     if (!question.text || !question.text.trim()) {
-  //       return `Питання #${i + 1} не має тексту.`;
-  //     }
-  //   }
-
-  //   return null;
-  // };
+  // const validateForm = (formData: typeof form): string | null => { ... }; -
+  // прибрано: логіка валідації тепер живе в useFormBuilder().validate()
 
   const handleSaveForm = () => {
     trySave(() => {
@@ -185,7 +175,7 @@ export default function FormBuilder() {
                   d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18"
                 />
               </svg>
-              До дашборду
+              {t("builder.backToDashboard")}
             </button>
 
             <div className="h-4 w-[1px] bg-slate-200 hidden sm:block" />
@@ -200,7 +190,7 @@ export default function FormBuilder() {
               <span
                 className={`h-1.5 w-1.5 rounded-full ${isDirty ? "bg-amber-500 animate-pulse" : "bg-emerald-500"}`}
               />
-              {isDirty ? "Є незбережені зміни" : "Усі зміни збережено"}
+              {isDirty ? t("builder.unsavedChanges") : t("builder.allSaved")}
             </span>
           </div>
 
@@ -211,7 +201,7 @@ export default function FormBuilder() {
               disabled={!isDirty || saveMutation.isPending}
               className="inline-flex h-10 items-center justify-center rounded-xl bg-indigo-600 px-4 text-sm font-semibold text-white cursor-pointer hover:bg-indigo-500 disabled:bg-slate-100 disabled:text-slate-400 disabled:cursor-not-allowed shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
             >
-              {saveMutation.isPending ? "Збереження..." : "Зберегти форму"}
+              {saveMutation.isPending ? t("builder.saving") : t("builder.saveForm")}
             </button>
           </div>
         </header>
@@ -226,27 +216,29 @@ export default function FormBuilder() {
                 value={form.title}
                 onChange={(e) => updateFormMeta({ title: e.target.value })}
                 className="w-full text-2xl font-bold border-b border-transparent hover:border-slate-200 focus:border-indigo-500 focus:outline-none pb-1 transition-colors"
-                placeholder="Назва опитування"
+                placeholder={t("builder.titlePlaceholder")}
               />
               <textarea
                 value={form.description}
                 onChange={(e) => updateFormMeta({ description: e.target.value })}
                 className="w-full mt-3 text-sm text-slate-600 border-b border-transparent hover:border-slate-200 focus:border-indigo-500 focus:outline-none pb-1 transition-colors resize-none h-10"
-                placeholder="Додайте опис опитування..."
+                placeholder={t("builder.descriptionPlaceholder")}
               />
 
               <div className="mt-4 pt-4 border-t border-slate-100 flex items-center justify-between gap-4">
                 <div>
-                  <p className="text-xs font-semibold text-slate-600">Режим проходження</p>
+                  <p className="text-xs font-semibold text-slate-600">
+                    {t("builder.responseMode.label")}
+                  </p>
                   <p className="text-[11px] text-slate-400 mt-0.5">
-                    Як респондент відповідатиме на питання
+                    {t("builder.responseMode.hint")}
                   </p>
                 </div>
                 <div className="flex gap-1 bg-slate-50 p-0.5 rounded-lg border border-slate-200 shrink-0">
                   {(
                     [
-                      { value: "ALL_AT_ONCE", label: "Усі питання" },
-                      { value: "STEP_BY_STEP", label: "По одному" },
+                      { value: "ALL_AT_ONCE", label: t("builder.responseMode.allAtOnce") },
+                      { value: "STEP_BY_STEP", label: t("builder.responseMode.stepByStep") },
                     ] as const
                   ).map((opt) => (
                     <button
@@ -266,7 +258,7 @@ export default function FormBuilder() {
                 </div>
               </div>
 
-              {errors.title && <ErrorInfo errorText={errors.title} />}
+              {errors.title && <ErrorInfo errorText={t(errors.title)} />}
             </div>
 
             <InlineAddButton onAdd={(type) => addQuestionAtPosition(type, 0)} />
@@ -298,14 +290,18 @@ export default function FormBuilder() {
                               onUpdate={(patch) => updateQuestion(index, patch)}
                               onDelete={() => deleteQuestion(index)}
                               onDuplicate={() => duplicateQuestion(index)}
-                              error={errors[`q-${index}`]}
+                              error={errors[`q-${index}`] ? t(errors[`q-${index}`]) : undefined}
                             >
                               <ConditionEditor
                                 condition={question.condition}
                                 currentOrder={question.order}
                                 allQuestions={form.questions}
                                 onChange={(next) => updateQuestion(index, { condition: next })}
-                                error={errors[`q-${index}-condition`]}
+                                error={
+                                  errors[`q-${index}-condition`]
+                                    ? t(errors[`q-${index}-condition`])
+                                    : undefined
+                                }
                               />
 
                               <hr className="border-slate-100 my-3" />
@@ -357,12 +353,14 @@ export default function FormBuilder() {
                                         className="w-full h-10 rounded-xl border border-slate-200 bg-slate-50/50 px-3 pr-10 text-sm font-medium text-slate-700 cursor-not-allowed appearance-none"
                                       >
                                         {!question.options.some((o) => o.isDefault) && (
-                                          <option value="">Оберіть варіант зі списку...</option>
+                                          <option value="">
+                                            {t("builder.dropdownPlaceholder")}
+                                          </option>
                                         )}
 
                                         {question.options.map((option) => (
                                           <option key={option.id} value={option.id}>
-                                            {option.text || "Порожній варіант..."}
+                                            {option.text || t("builder.emptyOption")}
                                           </option>
                                         ))}
                                       </select>
@@ -399,8 +397,10 @@ export default function FormBuilder() {
                                       <div className="h-4 w-4 bg-white rounded-full shadow-sm" />
                                     </div>
                                     <span className="text-xs font-medium text-slate-600">
-                                      Прев'ю перемикача:{" "}
-                                      {question.config?.defaultValue ? "Увімкнено" : "Вимкнено"}
+                                      {t("builder.booleanPreview.label")}{" "}
+                                      {question.config?.defaultValue
+                                        ? t("builder.booleanPreview.on")
+                                        : t("builder.booleanPreview.off")}
                                     </span>
                                   </div>
 
@@ -418,7 +418,7 @@ export default function FormBuilder() {
                               {question.type === "DATE" && (
                                 <div className="flex items-center gap-2 py-2 text-slate-400 text-xs animate-in fade-in duration-150">
                                   {calendarIcon}
-                                  <span>Поле вибору календарної дати (ДД.ММ.РРРР)</span>
+                                  <span>{t("builder.datePreview")}</span>
                                 </div>
                               )}
                             </QuestionCard>
@@ -434,10 +434,7 @@ export default function FormBuilder() {
 
                   {form.questions.length === 0 && (
                     <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-slate-200 bg-white p-12 pb-24 text-center mt-4">
-                      <p className="text-sm text-slate-400">
-                        Перетягніть елемент із сайдбару або скористайтеся кнопками додавання, щоб
-                        створити перше питання.
-                      </p>
+                      <p className="text-sm text-slate-400">{t("builder.emptyState")}</p>
                     </div>
                   )}
 
@@ -450,10 +447,10 @@ export default function FormBuilder() {
 
         <ConfirmModal
           isOpen={isLeaveModalOpen}
-          title="У вас є незбережені зміни"
-          description="Ви дійсно хочете вийти?"
-          confirmLabel="Вийти без збереження"
-          cancelLabel="Залишитися"
+          title={t("builder.leaveModal.title")}
+          description={t("builder.leaveModal.description")}
+          confirmLabel={t("builder.leaveModal.confirm")}
+          cancelLabel={t("builder.leaveModal.cancel")}
           onCancel={() => setIsLeaveModalOpen(false)}
           onConfirm={() => {
             setIsLeaveModalOpen(false);

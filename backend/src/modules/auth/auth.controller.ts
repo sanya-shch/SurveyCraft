@@ -17,6 +17,7 @@ import {
 } from "./auth.types.js";
 import { AuthLocals } from "../../shared/middleware/auth.js";
 import { AppError } from "../../shared/middleware/errorHandler.js";
+import { ErrorCode } from "@surveycraft/shared-types";
 import {
   clearRefreshTokenCookieOptions,
   REFRESH_TOKEN_COOKIE_NAME,
@@ -86,7 +87,7 @@ export const getMeHandler = async (req: Request, res: Response<GetMeDto>) => {
   });
 
   if (!user) {
-    throw new AppError("User not found", 404);
+    throw new AppError(ErrorCode.AUTH_USER_NOT_FOUND, 404);
   }
 
   res.json(user);

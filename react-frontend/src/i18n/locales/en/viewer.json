@@ -1,0 +1,35 @@
+{
+  "loading": "Loading survey...",
+  "accessError": {
+    "title": "Access error",
+    "fallback": "Form not found or access is restricted"
+  },
+  "thankYou": {
+    "title": "Thank you!",
+    "subtitle": "Your answers have been saved successfully. The survey is complete."
+  },
+  "questionFallback": "Question #{{number}}",
+  "requiredQuestionAriaLabel": "required question",
+  "textareaPlaceholder": "Enter a detailed answer...",
+  "textInputPlaceholder": "Enter your answer...",
+  "submit": "Submit answers",
+  "noQuestions": "This survey doesn't have any questions yet.",
+  "stepper": {
+    "reviewLabel": "Review answers",
+    "questionLabel": "Question {{number}}",
+    "reviewTitle": "All done, review your answers",
+    "changeAnswer": "Change",
+    "back": "← Back",
+    "next": "Next →",
+    "reviewErrorsHint": "Check the highlighted questions - some answers have errors.",
+    "booleanYes": "Yes",
+    "booleanNo": "No"
+  },
+  "validation": {
+    "numberMin": "Value must be at least {{min}}",
+    "numberMax": "Value must be at most {{max}}",
+    "textMinLength": "Minimum length: {{minLength}}",
+    "textMaxLength": "Maximum length: {{maxLength}}",
+    "nameInvalid": "Name can only contain letters, spaces, or hyphens"
+  }
+}

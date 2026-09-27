@@ -1,6 +1,7 @@
 <script setup lang="ts">
 
-import { ref } from "vue";
+import { ref, watch } from "vue";
+import { useI18n } from "vue-i18n";
 import { useFormAnalytics } from "./composables/useFormAnalytics";
 import { useFormPaths } from "./composables/useFormPaths";
 import { useFormFunnel } from "./composables/useFormFunnel";
@@ -18,7 +19,22 @@ import ExportMenu from "./components/ExportMenu.vue";
 const props = defineProps<{
   formId: string;
   apiBaseUrl?: string;
+  locale?: string;
 }>();
+
+const { t, locale } = useI18n();
+
+// React-хост (VueAnalyticsHost.tsx) передає реактивний `locale` проп через reactive() root-props
+// цей watch підхоплює зміну мови користувачем "на льоту", без перемонтування Vue-застосунку.
+watch(
+  () => props.locale,
+  (newLocale) => {
+    if (newLocale === "uk" || newLocale === "en") {
+      locale.value = newLocale;
+    }
+  },
+  { immediate: true },
+);
 
 const apiBaseUrl = props.apiBaseUrl || "http://localhost:5001/api";
 
@@ -69,11 +85,13 @@ const selectResponse = (responseId: string) => {
   <div class="analytics-root">
     <header class="header">
       <div>
-        <h1 class="page-title">Аналітика форми</h1>
-        <p class="page-subtitle">Vue 3 · завантажено через Module Federation</p>
+        <h1 class="page-title">{{ t("analytics.header.title") }}</h1>
+        <p class="page-subtitle">{{ t("analytics.header.subtitle") }}</p>
       </div>
       <div class="header-right">
-        <div v-if="analytics" class="total-badge">{{ analytics.totalResponses }} відповідей</div>
+        <div v-if="analytics" class="total-badge">
+          {{ t("analytics.header.totalResponses", { count: analytics.totalResponses }) }}
+        </div>
         <ExportMenu v-if="activeTab === 'responses'" :api-base-url="apiBaseUrl" :form-id="formId" />
       </div>
     </header>
@@ -85,7 +103,7 @@ const selectResponse = (responseId: string) => {
         :class="{ 'tab-btn--active': activeTab === 'overview' }"
         @click="activeTab = 'overview'"
       >
-        Огляд
+        {{ t("analytics.tabs.overview") }}
       </button>
       <button
         type="button"
@@ -93,25 +111,25 @@ const selectResponse = (responseId: string) => {
         :class="{ 'tab-btn--active': activeTab === 'responses' }"
         @click="activeTab = 'responses'"
       >
-        Сирі відповіді
+        {{ t("analytics.tabs.responses") }}
       </button>
     </nav>
 
     <template v-if="activeTab === 'overview'">
       <section class="funnel-section">
-        <h2 class="section-title">Funnel проходження</h2>
+        <h2 class="section-title">{{ t("analytics.funnel.sectionTitle") }}</h2>
 
-        <div v-if="funnelLoading" class="state-msg">Завантаження funnel...</div>
-        <div v-else-if="funnelError" class="state-msg state-msg--error">{{ funnelError }}</div>
+        <div v-if="funnelLoading" class="state-msg">{{ t("analytics.funnel.loading") }}</div>
+        <div v-else-if="funnelError" class="state-msg state-msg--error">{{ t(funnelError) }}</div>
         <FunnelChart v-else-if="funnel" :funnel="funnel" />
       </section>
 
-      <section v-if="analyticsLoading" class="state-msg">Завантаження аналітики...</section>
-      <section v-else-if="analyticsError" class="state-msg state-msg--error">{{ analyticsError }}</section>
+      <section v-if="analyticsLoading" class="state-msg">{{ t("analytics.analyticsSection.loading") }}</section>
+      <section v-else-if="analyticsError" class="state-msg state-msg--error">{{ t(analyticsError) }}</section>
 
       <template v-else-if="analytics">
         <section v-if="analytics.totalResponses === 0" class="empty-state">
-          Ще немає жодної завершеної відповіді на цю форму.
+          {{ t("analytics.analyticsSection.emptyState") }}
         </section>
 
         <template v-else>
@@ -126,14 +144,11 @@ const selectResponse = (responseId: string) => {
           </section>
 
           <section class="paths-section">
-            <h2 class="section-title">Шляхи проходження</h2>
-            <p class="section-hint">
-              Популярність гілок серед завершених відповідей. Для funnel з покинутими
-              проходженнями дивіться секцію "Funnel проходження" вище.
-            </p>
+            <h2 class="section-title">{{ t("analytics.paths.sectionTitle") }}</h2>
+            <p class="section-hint">{{ t("analytics.paths.sectionHint") }}</p>
 
-            <div v-if="pathsLoading" class="state-msg">Завантаження шляхів...</div>
-            <div v-else-if="pathsError" class="state-msg state-msg--error">{{ pathsError }}</div>
+            <div v-if="pathsLoading" class="state-msg">{{ t("analytics.paths.loading") }}</div>
+            <div v-else-if="pathsError" class="state-msg state-msg--error">{{ t(pathsError) }}</div>
             <PathsDiagram
               v-else-if="paths"
               :nodes="paths.nodes"
@@ -173,7 +188,7 @@ const selectResponse = (responseId: string) => {
             :error="responseDetailError"
           />
           <div v-else class="placeholder">
-            Оберіть відповідь зі списку ліворуч для перегляду деталей
+            {{ t("analytics.responseDetail.placeholder") }}
           </div>
         </div>
       </div>

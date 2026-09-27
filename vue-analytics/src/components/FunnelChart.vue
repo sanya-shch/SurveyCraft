@@ -1,10 +1,13 @@
 <script setup lang="ts">
 import { computed } from "vue";
+import { useI18n } from "vue-i18n";
 import type { FormFunnelDto } from "@surveycraft/shared-types";
 
 const props = defineProps<{
   funnel: FormFunnelDto;
 }>();
+
+const { t } = useI18n();
 
 const maxReached = computed(() => Math.max(1, ...props.funnel.nodes.map((n) => n.reachedCount)));
 
@@ -32,32 +35,34 @@ const completionPercent = computed(() => Math.round(props.funnel.completionRate 
     <div class="headline">
       <div class="headline-stat">
         <span class="headline-value">{{ funnel.totalAttempts }}</span>
-        <span class="headline-label">заходів</span>
+        <span class="headline-label">{{ t("analytics.funnel.attempts") }}</span>
       </div>
       <div class="headline-stat">
         <span class="headline-value headline-value--accent">{{ completionPercent }}%</span>
-        <span class="headline-label">завершили ({{ funnel.totalCompletions }} з {{ funnel.totalAttempts }})</span>
+        <span class="headline-label">{{
+          t("analytics.funnel.completed", {
+            completions: funnel.totalCompletions,
+            total: funnel.totalAttempts,
+          })
+        }}</span>
       </div>
     </div>
 
-    <p class="hint">
-      На відміну від "Шляхів проходження" вище, тут враховані й покинуті проходження (autosave
-      чернетки), не лише завершені відповіді — це і є справжній funnel.
-    </p>
+    <p class="hint">{{ t("analytics.funnel.hint") }}</p>
 
-    <div v-if="funnel.totalAttempts === 0" class="empty">Ще немає жодного заходу на форму.</div>
+    <div v-if="funnel.totalAttempts === 0" class="empty">{{ t("analytics.funnel.empty") }}</div>
 
     <div v-else class="rows">
       <div v-for="row in rows" :key="row.questionId" class="row">
         <div class="row-header">
-          <span class="row-text">{{ row.text || "Питання без назви" }}</span>
+          <span class="row-text">{{ row.text || t("analytics.common.untitledQuestion") }}</span>
           <span class="row-count">{{ row.reachedCount }} ({{ row.percentOfTotal }}%)</span>
         </div>
         <div class="bar-track">
           <div class="bar-fill" :style="{ width: row.percentOfMax + '%' }" />
         </div>
         <p v-if="row.dropOffFromPrev > 0" class="drop-off">
-          −{{ row.dropOffFromPrev }} відсіялись на цьому кроці
+          {{ t("analytics.funnel.dropOff", { count: row.dropOffFromPrev }) }}
         </p>
       </div>
     </div>

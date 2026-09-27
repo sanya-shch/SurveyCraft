@@ -1,0 +1,36 @@
+{
+  "header": {
+    "userLabel": "Користувач",
+    "logoutTitle": "Вийти"
+  },
+  "stats": {
+    "totalForms": "Всього форм",
+    "published": "Опубліковано",
+    "totalResponses": "Отримано відповідей"
+  },
+  "searchPlaceholder": "Пошук опитувань...",
+  "createButton": "Створити форму",
+  "creating": "Створення...",
+  "newFormTitle": "Нове опитування",
+  "emptyState": {
+    "title": "Форм не знайдено",
+    "subtitle": "Створіть своє перше опитування прямо зараз."
+  },
+  "card": {
+    "published": "Опубліковано",
+    "draft": "Чернетка",
+    "noDescription": "Без опису",
+    "responsesCount_one": "{{count}} відповідь",
+    "responsesCount_few": "{{count}} відповіді",
+    "responsesCount_many": "{{count}} відповідей",
+    "responsesCount_other": "{{count}} відповідей"
+  },
+  "menu": {
+    "copyLink": "Копіювати лінк",
+    "analytics": "Аналітика відповідей",
+    "unpublish": "Зняти з публікації",
+    "publish": "Опублікувати",
+    "duplicate": "Дублювати",
+    "delete": "Видалити"
+  }
+}

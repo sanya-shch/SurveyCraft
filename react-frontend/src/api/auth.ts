@@ -1,9 +1,21 @@
 import { z } from "zod";
+import { ErrorCode } from "@surveycraft/shared-types";
 import { api, publicApi } from "./axios";
 
+/**
+ * Повідомлення тут - ErrorCode (ті самі коди, що й на бекенді:
+ * backend/src/modules/auth/auth.schema.ts), а не готовий текст. Zod-схема
+ * створюється один раз при завантаженні модуля, до того як стане відомо
+ * обрану мову, тому вона фізично не може містити перекладений текст -
+ * переклад коду в текст відбувається в момент показу (Login.tsx/
+ * Register.tsx через translateErrorCode), не тут.
+ */
 export const loginSchema = z.object({
-  email: z.string().min(1, "Email є обовʼязковим").email("Некоректний формат email"),
-  password: z.string().min(1, "Пароль є обовʼязковим"),
+  email: z
+    .string()
+    .min(1, ErrorCode.VALIDATION_EMAIL_REQUIRED)
+    .email(ErrorCode.VALIDATION_EMAIL_INVALID),
+  password: z.string().min(1, ErrorCode.VALIDATION_PASSWORD_REQUIRED),
 });
 
 /**
@@ -14,19 +26,22 @@ export const loginSchema = z.object({
  */
 const registerPasswordSchema = z
   .string()
-  .min(8, "Пароль має містити щонайменше 8 символів")
-  .regex(/[a-z]/, "Пароль має містити хоча б одну малу літеру")
-  .regex(/[A-Z]/, "Пароль має містити хоча б одну велику літеру")
-  .regex(/[0-9]/, "Пароль має містити хоча б одну цифру");
+  .min(8, ErrorCode.VALIDATION_PASSWORD_TOO_SHORT)
+  .regex(/[a-z]/, ErrorCode.VALIDATION_PASSWORD_NO_LOWERCASE)
+  .regex(/[A-Z]/, ErrorCode.VALIDATION_PASSWORD_NO_UPPERCASE)
+  .regex(/[0-9]/, ErrorCode.VALIDATION_PASSWORD_NO_DIGIT);
 
 export const registerSchema = z
   .object({
-    email: z.string().min(1, "Email є обовʼязковим").email("Некоректний формат email"),
+    email: z
+      .string()
+      .min(1, ErrorCode.VALIDATION_EMAIL_REQUIRED)
+      .email(ErrorCode.VALIDATION_EMAIL_INVALID),
     password: registerPasswordSchema,
-    confirmPassword: z.string().min(1, "Підтвердження пароля є обовʼязковим"),
+    confirmPassword: z.string().min(1, ErrorCode.VALIDATION_CONFIRM_PASSWORD_REQUIRED),
   })
   .refine((data) => data.password === data.confirmPassword, {
-    message: "Паролі не співпадають",
+    message: ErrorCode.VALIDATION_PASSWORDS_DO_NOT_MATCH,
     path: ["confirmPassword"],
   });
 
